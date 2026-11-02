@@ -28,14 +28,16 @@ try {
          (email, status, consent_at)
          VALUES (:email, 'pending', NOW())
          ON DUPLICATE KEY UPDATE
-           email = VALUES(email)"
+           consent_at = IF(status = 'unsubscribed', NOW(), consent_at),
+           status = IF(status = 'unsubscribed', 'pending', status),
+           updated_at = NOW()"
     );
 
     $statement->execute(['email' => $email]);
 
     set_flash(
         'success',
-        'Your newsletter interest has been recorded. Email delivery is not yet enabled.'
+        'Your newsletter request has been recorded. Withdrawn requests return to pending review; email delivery is not enabled.'
     );
 } catch (PDOException $exception) {
     error_log('Newsletter signup failed: ' . $exception->getMessage());

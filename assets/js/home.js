@@ -1,102 +1,68 @@
 (() => {
   "use strict";
 
-  const carousel = document.querySelector(".home-carousel");
-  if (!carousel) return;
+  /* ── Hero carousel ───────────────────────────────────────────────── */
+  const track = document.querySelector(".home-carousel-track");
+  if (!track) return;
 
-  const slides = [...carousel.querySelectorAll(".home-slide")];
-  const dots = [...carousel.querySelectorAll("[data-carousel-dot]")];
-  const previous = carousel.querySelector("[data-carousel-prev]");
-  const next = carousel.querySelector("[data-carousel-next]");
+  const slides   = Array.from(track.querySelectorAll(".home-slide"));
+  const dotsWrap = document.querySelector(".home-carousel-dots");
+  const dots     = dotsWrap ? Array.from(dotsWrap.querySelectorAll(".home-dot")) : [];
+  const prevBtn  = document.getElementById("carousel-prev");
+  const nextBtn  = document.getElementById("carousel-next");
 
-  if (!slides.length) return;
+  let current   = 0;
+  let autoTimer = null;
+  const DELAY   = 5500;
+  const prefersReduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
-  let current = 0;
-  let timer = null;
+  const goTo = (index) => {
+    slides[current].classList.remove("is-active");
+    slides[current].setAttribute("aria-hidden", "true");
+    slides[current].inert = true;
+    if (dots[current]) dots[current].classList.remove("is-active");
+    if (dots[current]) dots[current].setAttribute("aria-selected", "false");
 
-  const reducedMotion = window.matchMedia(
-    "(prefers-reduced-motion: reduce)"
-  );
-
-  function goToSlide(index) {
     current = (index + slides.length) % slides.length;
 
-    slides.forEach((slide, i) => {
-      const active = i === current;
+    slides[current].classList.add("is-active");
+    slides[current].setAttribute("aria-hidden", "false");
+    slides[current].inert = false;
+    if (dots[current]) dots[current].classList.add("is-active");
+    if (dots[current]) dots[current].setAttribute("aria-selected", "true");
+  };
 
-      slide.classList.toggle("is-active", active);
-      slide.setAttribute("aria-hidden", String(!active));
+  const startAuto = () => {
+    if (prefersReduced) return;
+    clearInterval(autoTimer);
+    autoTimer = setInterval(() => goTo(current + 1), DELAY);
+  };
 
-      slide.querySelectorAll("a, button").forEach(element => {
-        element.tabIndex = active ? 0 : -1;
-      });
-    });
+  const stopAuto = () => clearInterval(autoTimer);
 
-    dots.forEach((dot, i) => {
-      const active = i === current;
-      dot.classList.toggle("is-active", active);
-      dot.setAttribute("aria-current", String(active));
-    });
-  }
+  if (prevBtn) prevBtn.addEventListener("click", () => { goTo(current - 1); stopAuto(); startAuto(); });
+  if (nextBtn) nextBtn.addEventListener("click", () => { goTo(current + 1); stopAuto(); startAuto(); });
 
-  function stopAutoplay() {
-    if (timer !== null) {
-      clearInterval(timer);
-      timer = null;
-    }
-  }
+  dots.forEach((dot, i) =>
+    dot.addEventListener("click", () => { goTo(i); stopAuto(); startAuto(); })
+  );
 
-  function startAutoplay() {
-    stopAutoplay();
+  if (!prefersReduced) startAuto();
 
-    if (reducedMotion.matches || document.hidden) return;
-
-    timer = setInterval(() => {
-      goToSlide(current + 1);
-    }, 6500);
-  }
-
-  previous?.addEventListener("click", () => {
-    goToSlide(current - 1);
-    startAutoplay();
+  track.addEventListener("mouseenter", stopAuto);
+  track.addEventListener("focusin", stopAuto);
+  track.addEventListener("mouseleave", startAuto);
+  track.addEventListener("focusout", (event) => {
+    if (!track.contains(event.relatedTarget)) startAuto();
   });
-
-  next?.addEventListener("click", () => {
-    goToSlide(current + 1);
-    startAutoplay();
-  });
-
-  dots.forEach((dot, index) => {
-    dot.addEventListener("click", () => {
-      goToSlide(index);
-      startAutoplay();
-    });
-  });
-
-  carousel.addEventListener("mouseenter", stopAutoplay);
-  carousel.addEventListener("mouseleave", startAutoplay);
-  carousel.addEventListener("focusin", stopAutoplay);
-  carousel.addEventListener("focusout", event => {
-    if (!carousel.contains(event.relatedTarget)) startAutoplay();
-  });
-
   document.addEventListener("visibilitychange", () => {
-    if (document.hidden) stopAutoplay();
-    else startAutoplay();
+    if (document.hidden) stopAuto();
+    else startAuto();
   });
 
-  document.addEventListener("keydown", event => {
-    if (!carousel.contains(document.activeElement)) return;
-
-    if (event.key === "ArrowLeft") {
-      goToSlide(current - 1);
-      startAutoplay();
-    } else if (event.key === "ArrowRight") {
-      goToSlide(current + 1);
-      startAutoplay();
-    }
+  // Keyboard support
+  track.addEventListener("keydown", (e) => {
+    if (e.key === "ArrowLeft")  { goTo(current - 1); stopAuto(); startAuto(); }
+    if (e.key === "ArrowRight") { goTo(current + 1); stopAuto(); startAuto(); }
   });
-
-  goToSlide(0);
-  startAutoplay();
 })();

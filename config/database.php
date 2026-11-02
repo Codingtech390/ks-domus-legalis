@@ -1,4 +1,3 @@
-
 <?php
 
 // declare(strict_types=1);
@@ -21,7 +20,7 @@ const DB_NAME = 'legal_news_portal';
 const DB_USER = 'root';
 const DB_PASS = '';
 
-const APP_NAME = 'LexBrief Legal News';
+const APP_NAME = 'K & S Domus Legalis';
 const BASE_URL = '/legal-news-portal';
 
 const UPLOAD_DIR = __DIR__ . '/../assets/uploads/';
@@ -47,7 +46,7 @@ $isHttps = isset($_SERVER['HTTPS'])
     && $_SERVER['HTTPS'] !== ''
     && strtolower((string) $_SERVER['HTTPS']) !== 'off';
 
-if (session_status() !== PHP_SESSION_ACTIVE) {
+if (PHP_SAPI !== 'cli' && session_status() !== PHP_SESSION_ACTIVE) {
     ini_set('session.use_strict_mode', '1');
     ini_set('session.use_only_cookies', '1');
     ini_set('session.use_trans_sid', '0');
@@ -220,7 +219,7 @@ function verify_csrf(): void
         || $stored === ''
         || !hash_equals($stored, $submitted)
     ) {
-        http_response_code(419);
+        http_response_code(403);
 
         exit(
             'Invalid or expired form token. '

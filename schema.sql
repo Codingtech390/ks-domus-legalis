@@ -49,6 +49,29 @@ CREATE TABLE IF NOT EXISTS articles (
     FULLTEXT INDEX ft_articles_search (title, excerpt, content)
 ) ENGINE=InnoDB;
 
+CREATE TABLE IF NOT EXISTS newsletter_subscribers (
+    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    email VARCHAR(254) NOT NULL,
+    status ENUM('pending', 'active', 'unsubscribed') NOT NULL DEFAULT 'pending',
+    consent_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+        ON UPDATE CURRENT_TIMESTAMP,
+    UNIQUE KEY uq_newsletter_email (email)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+CREATE TABLE IF NOT EXISTS contact_messages (
+    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(120) NOT NULL,
+    email VARCHAR(254) NOT NULL,
+    subject VARCHAR(180) NOT NULL,
+    message TEXT NOT NULL,
+    status ENUM('new', 'read', 'archived') NOT NULL DEFAULT 'new',
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    INDEX idx_contact_status_date (status, created_at),
+    INDEX idx_contact_email (email)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
 INSERT IGNORE INTO categories (name, slug, description) VALUES
 ('Supreme Court', 'supreme-court', 'Supreme Court judgments and legal developments.'),
 ('Constitutional Law', 'constitutional-law', 'Constitutional questions, rights and public law.'),
@@ -57,14 +80,5 @@ INSERT IGNORE INTO categories (name, slug, description) VALUES
 ('Civil Law', 'civil-law', 'Civil litigation, disputes and procedural updates.'),
 ('Legal Analysis', 'legal-analysis', 'Commentary and analysis of important legal issues.');
 
--- Development administrator:
--- Email: admin@lawportal.local
--- Password: ChangeMe123!
--- Replace this account's password before deployment.
--- The hash below is a PHP password_hash() bcrypt hash.
-INSERT IGNORE INTO admins (name, email, password)
-VALUES (
-    'Portal Administrator',
-    'admin@lawportal.local',
-    '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2uheWG/igi.'
-);
+-- Create the first administrator with tools/manage-admin.ps1 after import.
+-- Passwords are generated with PHP password_hash(); no password is seeded here.

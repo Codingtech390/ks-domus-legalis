@@ -1,4 +1,3 @@
-
 <?php
 
 declare(strict_types=1);
@@ -19,10 +18,10 @@ if (ini_get('session.use_cookies')) {
     $cookie = session_get_cookie_params();
 
     setcookie(session_name(), '', [
-        'expires' => time() - 42000,
-        'path' => $cookie['path'],
-        'domain' => $cookie['domain'],
-        'secure' => $cookie['secure'],
+        'expires'  => time() - 42000,
+        'path'     => $cookie['path'],
+        'domain'   => $cookie['domain'],
+        'secure'   => $cookie['secure'],
         'httponly' => $cookie['httponly'],
         'samesite' => $cookie['samesite'] ?? 'Lax',
     ]);
@@ -30,5 +29,5 @@ if (ini_get('session.use_cookies')) {
 
 session_destroy();
 
-header('Location: ' . url('admin/login.php'));
-exit;
+set_flash('success', 'You have been signed out.');
+redirect('admin/login.php');

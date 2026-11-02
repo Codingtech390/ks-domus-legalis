@@ -1,0 +1,7 @@
+Options -Indexes
+
+# Keep SQL dumps, local configuration artifacts, and source blueprints out of
+# direct HTTP access while preserving the files in the project workspace.
+<FilesMatch "(?i)\.(sql|dump|bak|backup|env|ini|py)$">
+    Require all denied
+</FilesMatch>

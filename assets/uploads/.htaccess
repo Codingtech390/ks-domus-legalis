@@ -1,0 +1,14 @@
+Options -Indexes
+
+# Deny HTTP access to script and executable formats in the upload directory.
+<FilesMatch "(?i)\.(php([0-9]+)?|phtml|pht|phar|phps|cgi|fcgi|pl|py|sh|asp|aspx|jsp|shtml|svg|exe|dll|bat|cmd|com|msi|ps1)$">
+    Require all denied
+</FilesMatch>
+
+# Serve the application's approved image types through Apache's static handler.
+<FilesMatch "(?i)\.(jpe?g|png|gif|webp)$">
+    SetHandler default-handler
+</FilesMatch>
+
+# Remove inherited executable handlers as a second layer of protection.
+RemoveHandler .php .php3 .php4 .php5 .php7 .php8 .phtml .pht .phar .phps .cgi .fcgi .pl .py .sh .asp .aspx .jsp .shtml
