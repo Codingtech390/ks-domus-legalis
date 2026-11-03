@@ -379,20 +379,15 @@ $stylesheetUrl = url('assets/css/style.css');
 
                     <span class="brand-copy flex flex-col leading-none">
 
-                        <strong class="text-[30px] font-bold tracking-[-0.075em] text-[#24104f]"
+                        <strong class="text-[35px] font-bold tracking-[-0.075em] text-[#24104f]"
                             style="font-family:'Poppins',sans-serif !important;">
                             K <span class="font-medium text-[#9870bd]">&amp;</span> S
                         </strong>
 
-                        <span class="brand-sub mt-1 text-[11px] font-semibold tracking-[0.12em] text-[#37313e]"
+                        <span class="brand-sub mt-1 text-[14px] font-bold tracking-[0.18em] text-[#37313e]"
                             style="font-family:'Poppins',sans-serif !important;">
                             DOMUS LEGALIS
                         </span>
-
-                        <small class="mt-1.5 text-[8px] font-semibold tracking-[0.24em] text-[#9870bd]"
-                            style="font-family:'Poppins',sans-serif !important;">
-                            LEGAL INTELLIGENCE
-                        </small>
 
                     </span>
                 </a>

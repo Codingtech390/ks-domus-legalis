@@ -15,16 +15,55 @@
 |--------------------------------------------------------------------------
 */
 
-const DB_HOST = '127.0.0.1';
-const DB_NAME = 'legal_news_portal';
-const DB_USER = 'root';
-const DB_PASS = '';
+/*
+|--------------------------------------------------------------------------
+| Application configuration
+|--------------------------------------------------------------------------
+*/
 
-const APP_NAME = 'K & S Domus Legalis';
-const BASE_URL = '/legal-news-portal';
+$productionConfigPath = __DIR__ . '/database.production.php';
+$isProduction = is_file($productionConfigPath);
 
-const UPLOAD_DIR = __DIR__ . '/../assets/uploads/';
-const MAX_UPLOAD_BYTES = 5 * 1024 * 1024;
+if ($isProduction) {
+    $productionConfig = require $productionConfigPath;
+
+    if (!is_array($productionConfig)) {
+        throw new RuntimeException('Invalid production database configuration.');
+    }
+
+    $dbHost = $productionConfig['host'] ?? '';
+    $dbName = $productionConfig['name'] ?? '';
+    $dbUser = $productionConfig['user'] ?? '';
+    $dbPass = $productionConfig['pass'] ?? '';
+
+    if (
+        $dbHost === '' ||
+        $dbName === '' ||
+        $dbUser === '' ||
+        $dbPass === ''
+    ) {
+        throw new RuntimeException('Production database credentials are incomplete.');
+    }
+} else {
+    // Local XAMPP configuration
+    $dbHost = '127.0.0.1';
+    $dbName = 'legal_news_portal';
+    $dbUser = 'root';
+    $dbPass = '';
+}
+
+define('DB_HOST', $dbHost);
+define('DB_NAME', $dbName);
+define('DB_USER', $dbUser);
+define('DB_PASS', $dbPass);
+
+define('APP_NAME', 'K & S Domus Legalis');
+
+define('BASE_URL', $isProduction ? '' : '/legal-news-portal');
+
+define('UPLOAD_DIR', __DIR__ . '/../assets/uploads/');
+define('MAX_UPLOAD_BYTES', 5 * 1024 * 1024);
+
 
 /*
 |--------------------------------------------------------------------------

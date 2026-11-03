@@ -181,19 +181,19 @@ require_once __DIR__ . '/includes/header.php';
 <!-- JOURNAL COVERAGE -->
 
 <?php
+
 $coverageImages = [
-    'corporate-law' => 'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&w=900&q=85',
-    'corporate' => 'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&w=900&q=85',
-    'litigation' => 'https://images.unsplash.com/photo-1589829545856-d10d557cf95f?auto=format&fit=crop&w=900&q=85',
-    'dispute-resolution' => 'https://images.unsplash.com/photo-1589829545856-d10d557cf95f?auto=format&fit=crop&w=900&q=85',
-    'intellectual-property' => 'https://images.unsplash.com/photo-1455390582262-044cdead277a?auto=format&fit=crop&w=900&q=85',
-    'technology' => 'https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&fit=crop&w=900&q=85',
-    'real-estate' => 'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&w=900&q=85',
-    'employment' => 'https://images.unsplash.com/photo-1521737711867-e3b97375f902?auto=format&fit=crop&w=900&q=85',
-    'taxation' => 'https://images.unsplash.com/photo-1554224155-6726b3ff858f?auto=format&fit=crop&w=900&q=85',
-    'banking' => 'https://images.unsplash.com/photo-1444653614773-995cb1ef9efa?auto=format&fit=crop&w=900&q=85',
-    'environment' => 'https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05?auto=format&fit=crop&w=900&q=85',
+    'civil-law' => url('assets/images/coverage/civil-law.png'),
+    'constitutional-law' => url('assets/images/coverage/constitutional-law.png'),
+    'corporate-law' => url('assets/images/coverage/corporate-law.png'),
+    'criminal-law' => url('assets/images/coverage/criminal-law.png'),
+    'legal-analysis' => url('assets/images/coverage/legal-analysis.png'),
+    'supreme-court' => url('assets/images/coverage/supreme-court.png'),
+
 ];
+
+$defaultCoverageImage = url('assets/images/coverage/default-legal.jpg');
+
 
 $defaultCoverageImage = 'https://images.unsplash.com/photo-1589829545856-d10d557cf95f?auto=format&fit=crop&w=900&q=85';
 ?>
@@ -201,19 +201,11 @@ $defaultCoverageImage = 'https://images.unsplash.com/photo-1589829545856-d10d557
 <!-- JOURNAL COVERAGE -->
 
 <?php
-$coverageImages = [
-    'corporate-law' => 'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&w=900&q=85',
-    'corporate' => 'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&w=900&q=85',
-    'litigation' => 'https://images.unsplash.com/photo-1589829545856-d10d557cf95f?auto=format&fit=crop&w=900&q=85',
-    'dispute-resolution' => 'https://images.unsplash.com/photo-1589829545856-d10d557cf95f?auto=format&fit=crop&w=900&q=85',
-    'intellectual-property' => 'https://images.unsplash.com/photo-1455390582262-044cdead277a?auto=format&fit=crop&w=900&q=85',
-    'technology' => 'https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&fit=crop&w=900&q=85',
-    'real-estate' => 'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&w=900&q=85',
-    'employment' => 'https://images.unsplash.com/photo-1521737711867-e3b97375f902?auto=format&fit=crop&w=900&q=85',
-    'taxation' => 'https://images.unsplash.com/photo-1554224155-6726b3ff858f?auto=format&fit=crop&w=900&q=85',
-    'banking' => 'https://images.unsplash.com/photo-1444653614773-995cb1ef9efa?auto=format&fit=crop&w=900&q=85',
-    'environment' => 'https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05?auto=format&fit=crop&w=900&q=85',
-];
+
+
+
+$defaultCoverageImage = url('assets/images/coverage/default-legal.jpg');
+
 
 $defaultCoverageImage = 'https://images.unsplash.com/photo-1589829545856-d10d557cf95f?auto=format&fit=crop&w=900&q=85';
 ?>
@@ -776,7 +768,7 @@ $defaultCoverageImage = 'https://images.unsplash.com/photo-1589829545856-d10d557
             </span>
 
             <h2
-                
+
                 class="mt-8 text-4xl font-semibold leading-[1.02] tracking-[-0.055em] text-[#211c29] sm:text-5xl lg:text-[60px]">
                 Stay informed.
                 <span class="block text-[#9870bd]">Stay ahead.</span>

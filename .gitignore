@@ -1,0 +1,104 @@
+
+# ==========================================
+# K&S DOMUS LEGALIS
+# Git ignore rules
+# ==========================================
+
+# ------------------------------------------
+# Environment variables and secrets
+# ------------------------------------------
+.env
+.env.*
+!.env.example
+
+# Production and local database credentials
+/config/database.production.php
+/config/database.local.php
+/config/*-local.php
+/config/*-production.php
+
+# Private keys and certificates
+*.pem
+*.key
+*.p12
+*.pfx
+
+# ------------------------------------------
+# Database backups and temporary exports
+# ------------------------------------------
+*_backup*.sql
+*backup*.sql
+*.sql.gz
+*.dump
+
+# ------------------------------------------
+# User-uploaded content
+# Preserve the folders and their security files.
+# ------------------------------------------
+/assets/uploads/*
+!/assets/uploads/.htaccess
+!/assets/uploads/.gitkeep
+
+/assets/upload/*
+!/assets/upload/.htaccess
+!/assets/upload/.gitkeep
+
+# ------------------------------------------
+# Temporary files and logs
+# ------------------------------------------
+*.log
+*.tmp
+*.temp
+*.bak
+*.swp
+*.swo
+*~
+
+# ------------------------------------------
+# ZIP archives and generated packages
+# ------------------------------------------
+*.zip
+*.7z
+*.rar
+*.tar
+*.tar.gz
+
+# ------------------------------------------
+# Operating system files
+# ------------------------------------------
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# ------------------------------------------
+# Editors and IDEs
+# ------------------------------------------
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+
+.idea/
+*.code-workspace
+
+# ------------------------------------------
+# Cache and generated files
+# ------------------------------------------
+/cache/
+/tmp/
+/temp/
+/logs/
+/node_modules/
+/vendor/
+
+# ------------------------------------------
+# Local development and diagnostic files
+# ------------------------------------------
+/test-categories.php
+/php-error.log
+/error_log
+
+# ------------------------------------------
+# Local backups
+# ------------------------------------------
+/legal-news-portal-backup/
+/legal-portal-deploy/

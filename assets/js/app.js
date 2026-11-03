@@ -67,15 +67,16 @@
         document.body.appendChild(field);
         field.select();
         let copied = false;
-        try { copied = document.execCommand("copy"); } catch (_) {}
+        try {
+          copied = document.execCommand("copy");
+        } catch (_) {}
         field.remove();
         return copied;
       };
 
       const announce = (message) => {
         if (status) status.textContent = message;
-        copyButton.textContent =
-          message === "Link copied to clipboard." ? "Copied ✓" : "Copy link";
+        copyButton.textContent = message === "Link copied to clipboard." ? "Copied ✓" : "Copy link";
       };
 
       if (navigator.clipboard && window.isSecureContext) {
@@ -143,9 +144,9 @@
 
     showLoader();
 
-    form.querySelectorAll('button[type="submit"], input[type="submit"]').forEach(
-      (button) => button.setAttribute("aria-busy", "true"),
-    );
+    form
+      .querySelectorAll('button[type="submit"], input[type="submit"]')
+      .forEach((button) => button.setAttribute("aria-busy", "true"));
   });
 
   /* ── Scroll reveal ───────────────────────────────────────────────── */
@@ -220,4 +221,6 @@
 
   window.addEventListener("scroll", updateScroll, { passive: true });
   updateScroll();
+
+  
 })();
