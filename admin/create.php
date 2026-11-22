@@ -44,10 +44,8 @@ $values = [
 */
 
 try {
-    if (!isset($pdo) || !$pdo instanceof PDO) {
-        throw new RuntimeException(
-            'The database connection is not available.'
-        );
+    if (!isset($pdo) || !($pdo instanceof PDO)) {
+        throw new RuntimeException('The database connection is not available.');
     }
 
     /*
@@ -57,37 +55,28 @@ try {
     try {
         ensure_default_categories($pdo);
     } catch (Throwable $exception) {
-        error_log(
-            'Default category initialization failed: '
-                . $exception->getMessage()
-        );
+        error_log('Default category initialization failed: ' . $exception->getMessage());
     }
 
-    $categoryStatement = $pdo->query(
-        'SELECT id, name FROM categories ORDER BY name ASC'
-    );
+    $categoryStatement = $pdo->query('SELECT id, name FROM categories ORDER BY name ASC');
 
     $categories = $categoryStatement->fetchAll(PDO::FETCH_ASSOC);
 
     /*
      * Normalize and validate the result structure.
      */
-    $categories = array_values(array_filter(
-        $categories,
-        static function (array $category): bool {
-            return isset($category['id'], $category['name'])
-                && (string) $category['id'] !== ''
-                && trim((string) $category['name']) !== '';
-        }
-    ));
+    $categories = array_values(
+        array_filter($categories, static function (array $category): bool {
+            return isset($category['id'], $category['name']) &&
+                (string) $category['id'] !== '' &&
+                trim((string) $category['name']) !== '';
+        }),
+    );
 } catch (Throwable $exception) {
     $categoryLoadError = true;
     $categories = [];
 
-    error_log(
-        'Category loading failed in admin/create.php: '
-            . $exception->getMessage()
-    );
+    error_log('Category loading failed in admin/create.php: ' . $exception->getMessage());
 
     /*
      * Log the database name as diagnostic context without exposing
@@ -99,14 +88,11 @@ try {
             $databaseName = $databaseStatement->fetchColumn();
 
             error_log(
-                'Category query database: '
-                    . (is_string($databaseName) ? $databaseName : '(unknown)')
+                'Category query database: ' .
+                    (is_string($databaseName) ? $databaseName : '(unknown)'),
             );
         } catch (Throwable $diagnosticException) {
-            error_log(
-                'Unable to determine active database: '
-                    . $diagnosticException->getMessage()
-            );
+            error_log('Unable to determine active database: ' . $diagnosticException->getMessage());
         }
     }
 }
@@ -126,9 +112,7 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
     foreach ($values as $key => $default) {
         $submittedValue = $_POST[$key] ?? $default;
 
-        $values[$key] = is_scalar($submittedValue)
-            ? (string) $submittedValue
-            : (string) $default;
+        $values[$key] = is_scalar($submittedValue) ? (string) $submittedValue : (string) $default;
     }
 
     /*
@@ -148,15 +132,15 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
     try {
         if ($categoryLoadError) {
             throw new RuntimeException(
-                'Categories could not be loaded. Check the database connection '
-                    . 'and the PHP error log, then try again.'
+                'Categories could not be loaded. Check the database connection ' .
+                    'and the PHP error log, then try again.',
             );
         }
 
         if ($categories === []) {
             throw new RuntimeException(
-                'No categories are available. Check the categories table '
-                    . 'in the database connected to this website.'
+                'No categories are available. Check the categories table ' .
+                    'in the database connected to this website.',
             );
         }
 
@@ -172,16 +156,12 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
          * Verify that the chosen category exists in the current database.
          * Do not trust a category ID supplied by the browser.
          */
-        $selectedCategoryId = filter_var(
-            $data['category_id'] ?? null,
-            FILTER_VALIDATE_INT,
-            ['options' => ['min_range' => 1]]
-        );
+        $selectedCategoryId = filter_var($data['category_id'] ?? null, FILTER_VALIDATE_INT, [
+            'options' => ['min_range' => 1],
+        ]);
 
         if ($selectedCategoryId === false || $selectedCategoryId === null) {
-            throw new RuntimeException(
-                'Please choose a valid category.'
-            );
+            throw new RuntimeException('Please choose a valid category.');
         }
 
         $categoryExists = false;
@@ -195,23 +175,17 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
 
         if (!$categoryExists) {
             throw new RuntimeException(
-                'The selected category no longer exists. '
-                    . 'Refresh the page and choose another category.'
+                'The selected category no longer exists. ' .
+                    'Refresh the page and choose another category.',
             );
         }
 
         /*
          * Verify the authenticated administrator is available.
          */
-        if (
-            !isset($admin)
-            || !is_array($admin)
-            || !isset($admin['id'])
-            || (int) $admin['id'] < 1
-        ) {
+        if (!isset($admin) || !is_array($admin) || !isset($admin['id']) || (int) $admin['id'] < 1) {
             throw new RuntimeException(
-                'Your administrator session could not be verified. '
-                    . 'Please sign in again.'
+                'Your administrator session could not be verified. ' . 'Please sign in again.',
             );
         }
 
@@ -219,26 +193,20 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
          * Validate status independently.
          */
         if (!in_array($data['status'], ['draft', 'published'], true)) {
-            throw new RuntimeException(
-                'Please select a valid publication status.'
-            );
+            throw new RuntimeException('Please select a valid publication status.');
         }
 
         /*
          * Upload a featured image if one was supplied.
          */
-        $uploadedImage = upload_featured_image(
-            $_FILES['featured_image'] ?? []
-        );
+        $uploadedImage = upload_featured_image($_FILES['featured_image'] ?? []);
 
         /*
          * Generate a unique slug using the existing article helper.
          */
         $slug = unique_article_slug($pdo, $data['title']);
 
-        $publishedAt = $data['status'] === 'published'
-            ? date('Y-m-d H:i:s')
-            : null;
+        $publishedAt = $data['status'] === 'published' ? date('Y-m-d H:i:s') : null;
 
         /*
          * Insert the article.
@@ -267,7 +235,7 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
                     :featured_image,
                     :status,
                     :published_at
-                )'
+                )',
         );
 
         $insert->execute([
@@ -293,7 +261,7 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
             'success',
             $data['status'] === 'published'
                 ? 'Article published successfully.'
-                : 'Draft saved successfully.'
+                : 'Draft saved successfully.',
         );
 
         redirect('admin/index.php');
@@ -307,9 +275,9 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
                 delete_uploaded_image($uploadedImage);
             } catch (Throwable $imageException) {
                 error_log(
-                    'Failed to clean up featured image after article creation '
-                        . 'failed: '
-                        . $imageException->getMessage()
+                    'Failed to clean up featured image after article creation ' .
+                        'failed: ' .
+                        $imageException->getMessage(),
                 );
             }
         }
@@ -317,15 +285,12 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
         if ($exception instanceof RuntimeException) {
             $errors[] = $exception->getMessage();
         } else {
-            error_log(
-                'Article creation failed: '
-                    . $exception->getMessage()
-            );
+            error_log('Article creation failed: ' . $exception->getMessage());
 
             $errors[] =
-                'The article could not be saved. Please check the fields '
-                . 'and try again. If the problem continues, check the PHP '
-                . 'error log.';
+                'The article could not be saved. Please check the fields ' .
+                'and try again. If the problem continues, check the PHP ' .
+                'error log.';
         }
     }
 }
@@ -337,7 +302,6 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
 */
 
 require_once __DIR__ . '/../includes/header.php';
-
 ?>
 
 <link
@@ -527,7 +491,9 @@ require_once __DIR__ . '/../includes/header.php';
                     maxlength="600"
                     rows="3"
                     placeholder="Summarize the key development in a few concise sentences."
-                    class="w-full resize-y border border-slate-200 px-4 py-3 text-sm leading-6 outline-none focus:border-red-600"><?= e($values['excerpt']) ?></textarea>
+                    class="w-full resize-y border border-slate-200 px-4 py-3 text-sm leading-6 outline-none focus:border-red-600"><?= e(
+                        $values['excerpt'],
+                    ) ?></textarea>
 
                 <p class="mt-1 text-xs text-slate-500">
                     Maximum 600 characters. Used in article cards and search previews.

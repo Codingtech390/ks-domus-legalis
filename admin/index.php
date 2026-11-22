@@ -13,12 +13,10 @@ $searchQuery = trim((string) ($_GET['q'] ?? ''));
 $statusFilter = (string) ($_GET['status'] ?? '');
 
 if (strlen($searchQuery) > 150) {
-
     $searchQuery = substr($searchQuery, 0, 150);
 }
 
 if (!in_array($statusFilter, ['', 'draft', 'published'], true)) {
-
     $statusFilter = '';
 }
 
@@ -29,21 +27,18 @@ $page = is_int($page) && $page > 0 ? $page : 1;
 $perPage = 10;
 
 $metricsStatement = $pdo->query(
-
     "SELECT COUNT(*) AS total,
 
             SUM(status = 'published') AS published,
 
             SUM(status = 'draft') AS drafts
 
-     FROM articles"
-
+     FROM articles",
 );
 
 $metrics = $metricsStatement->fetch();
 
 $caseworkMetricsStatement = $pdo->query(
-
     "SELECT
 
         case_type,
@@ -54,58 +49,41 @@ $caseworkMetricsStatement = $pdo->query(
 
      FROM case_highlights
 
-     GROUP BY case_type, status"
-
+     GROUP BY case_type, status",
 );
 
 $caseworkMetrics = [
-
     'important' => [
-
         'published' => 0,
 
         'draft' => 0,
-
     ],
 
     'pro_bono' => [
-
         'published' => 0,
 
         'draft' => 0,
-
     ],
-
 ];
 
 foreach ($caseworkMetricsStatement->fetchAll(PDO::FETCH_ASSOC) as $metric) {
-
     $type = $metric['case_type'];
 
     $status = $metric['status'];
 
-    if (
-
-        isset($caseworkMetrics[$type])
-
-        && isset($caseworkMetrics[$type][$status])
-
-    ) {
-
+    if (isset($caseworkMetrics[$type]) && isset($caseworkMetrics[$type][$status])) {
         $caseworkMetrics[$type][$status] = (int) $metric['total'];
     }
 }
 
 $todayStatement = $pdo->query(
-
     "SELECT COUNT(*) FROM articles
 
      WHERE status = 'published'
 
        AND published_at >= CURDATE()
 
-       AND published_at < CURDATE() + INTERVAL 1 DAY"
-
+       AND published_at < CURDATE() + INTERVAL 1 DAY",
 );
 
 $publishedToday = (int) $todayStatement->fetchColumn();
@@ -115,7 +93,6 @@ $where = ['1 = 1'];
 $params = [];
 
 if ($searchQuery !== '') {
-
     $where[] = '(a.title LIKE :title OR a.excerpt LIKE :excerpt)';
 
     $params['title'] = '%' . $searchQuery . '%';
@@ -124,7 +101,6 @@ if ($searchQuery !== '') {
 }
 
 if ($statusFilter !== '') {
-
     $where[] = 'a.status = :status';
 
     $params['status'] = $statusFilter;
@@ -133,13 +109,11 @@ if ($statusFilter !== '') {
 $whereSql = implode(' AND ', $where);
 
 $countStatement = $pdo->prepare(
-
     "SELECT COUNT(*) FROM articles a
 
      INNER JOIN categories c ON c.id = a.category_id
 
-     WHERE $whereSql"
-
+     WHERE $whereSql",
 );
 
 $countStatement->execute($params);
@@ -149,14 +123,12 @@ $totalRows = (int) $countStatement->fetchColumn();
 $totalPages = max(1, (int) ceil($totalRows / $perPage));
 
 if ($page > $totalPages) {
-
     $page = $totalPages;
 }
 
 $offset = ($page - 1) * $perPage;
 
 $listStatement = $pdo->prepare(
-
     "SELECT a.id, a.title, a.slug, a.excerpt, a.featured_image,
 
             a.status, a.published_at, a.created_at, a.updated_at,
@@ -173,12 +145,10 @@ $listStatement = $pdo->prepare(
 
      ORDER BY a.updated_at DESC, a.id DESC
 
-     LIMIT :limit OFFSET :offset"
-
+     LIMIT :limit OFFSET :offset",
 );
 
 foreach ($params as $key => $value) {
-
     $listStatement->bindValue(':' . $key, $value, PDO::PARAM_STR);
 }
 
@@ -191,7 +161,6 @@ $listStatement->execute();
 $articles = $listStatement->fetchAll();
 
 require_once __DIR__ . '/../includes/header.php';
-
 ?>
 
 <section class="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
@@ -210,13 +179,17 @@ require_once __DIR__ . '/../includes/header.php';
 
             <p class="mt-2 text-sm text-slate-500">
 
-                Welcome back, <?= e($_SESSION['admin_name'] ?? ($admin['name'] ?? 'Administrator')) ?>. Manage your legal coverage here.
+                Welcome back, <?= e(
+                    $_SESSION['admin_name'] ?? ($admin['name'] ?? 'Administrator'),
+                ) ?>. Manage your legal coverage here.
 
             </p>
 
         </div>
 
-        <a href="<?= e(url('admin/create.php')) ?>" class="inline-flex items-center justify-center gap-2 bg-[#24104f] px-5 py-3.5 text-sm font-extrabold text-white hover:bg-[#9870bd]">
+        <a href="<?= e(
+            url('admin/create.php'),
+        ) ?>" class="inline-flex items-center justify-center gap-2 bg-[#24104f] px-5 py-3.5 text-sm font-extrabold text-white hover:bg-[#9870bd]">
 
             <span class="text-lg">+</span> Create article
 
@@ -325,7 +298,9 @@ require_once __DIR__ . '/../includes/header.php';
 
                 </div>
 
-                <form method="get" action="<?= e(url('admin/index.php')) ?>" class="flex flex-col gap-2 sm:flex-row">
+                <form method="get" action="<?= e(
+                    url('admin/index.php'),
+                ) ?>" class="flex flex-col gap-2 sm:flex-row">
 
                     <input
 
@@ -345,9 +320,13 @@ require_once __DIR__ . '/../includes/header.php';
 
                         <option value="">All statuses</option>
 
-                        <option value="published" <?= $statusFilter === 'published' ? 'selected' : '' ?>>Published</option>
+                        <option value="published" <?= $statusFilter === 'published'
+                            ? 'selected'
+                            : '' ?>>Published</option>
 
-                        <option value="draft" <?= $statusFilter === 'draft' ? 'selected' : '' ?>>Draft</option>
+                        <option value="draft" <?= $statusFilter === 'draft'
+                            ? 'selected'
+                            : '' ?>>Draft</option>
 
                     </select>
 
@@ -367,7 +346,9 @@ require_once __DIR__ . '/../includes/header.php';
 
                 <p class="mt-2 text-sm text-slate-500">Create an article or adjust your filters.</p>
 
-                <a href="<?= e(url('admin/create.php')) ?>" class="mt-5 inline-flex bg-[#24104f] px-5 py-3 text-sm font-bold text-white hover:bg-[#9870bd]">Create your first article</a>
+                <a href="<?= e(
+                    url('admin/create.php'),
+                ) ?>" class="mt-5 inline-flex bg-[#24104f] px-5 py-3 text-sm font-bold text-white hover:bg-[#9870bd]">Create your first article</a>
 
             </div>
 
@@ -409,7 +390,9 @@ require_once __DIR__ . '/../includes/header.php';
 
                                             <img
 
-                                                src="<?= e(image_url($article['featured_image'])) ?>"
+                                                src="<?= e(
+                                                    image_url($article['featured_image']),
+                                                ) ?>"
 
                                                 alt=""
 
@@ -425,9 +408,13 @@ require_once __DIR__ . '/../includes/header.php';
 
                                         <div class="max-w-md">
 
-                                            <p class="font-bold text-slate-900"><?= e($article['title']) ?></p>
+                                            <p class="font-bold text-slate-900"><?= e(
+                                                $article['title'],
+                                            ) ?></p>
 
-                                            <p class="mt-1 line-clamp-2 text-xs leading-5 text-slate-500"><?= e($article['excerpt']) ?></p>
+                                            <p class="mt-1 line-clamp-2 text-xs leading-5 text-slate-500"><?= e(
+                                                $article['excerpt'],
+                                            ) ?></p>
 
                                         </div>
 
@@ -435,11 +422,15 @@ require_once __DIR__ . '/../includes/header.php';
 
                                 </td>
 
-                                <td class="px-5 py-4 text-sm text-slate-600"><?= e($article['category_name']) ?></td>
+                                <td class="px-5 py-4 text-sm text-slate-600"><?= e(
+                                    $article['category_name'],
+                                ) ?></td>
 
                                 <td class="px-5 py-4">
 
-                                    <span class="<?= $article['status'] === 'published' ? 'bg-green-50 text-green-700' : 'bg-amber-50 text-amber-700' ?> inline-flex px-2.5 py-1 text-[10px] font-extrabold uppercase tracking-wider">
+                                    <span class="<?= $article['status'] === 'published'
+                                        ? 'bg-green-50 text-green-700'
+                                        : 'bg-amber-50 text-amber-700' ?> inline-flex px-2.5 py-1 text-[10px] font-extrabold uppercase tracking-wider">
 
                                         <?= e($article['status']) ?>
 
@@ -447,7 +438,9 @@ require_once __DIR__ . '/../includes/header.php';
 
                                 </td>
 
-                                <td class="px-5 py-4 text-xs text-slate-500"><?= e(format_date($article['updated_at'])) ?></td>
+                                <td class="px-5 py-4 text-xs text-slate-500"><?= e(
+                                    format_date($article['updated_at']),
+                                ) ?></td>
 
                                 <td class="px-5 py-4">
 
@@ -457,7 +450,12 @@ require_once __DIR__ . '/../includes/header.php';
 
                                             <a
 
-                                                href="<?= e(url('post.php?slug=' . rawurlencode($article['slug']))) ?>"
+                                                href="<?= e(
+                                                    url(
+                                                        'post.php?slug=' .
+                                                            rawurlencode($article['slug']),
+                                                    ),
+                                                ) ?>"
 
                                                 target="_blank"
 
@@ -469,15 +467,21 @@ require_once __DIR__ . '/../includes/header.php';
 
                                         <a
 
-                                            href="<?= e(url('admin/edit.php?id=' . (int) $article['id'])) ?>"
+                                            href="<?= e(
+                                                url('admin/edit.php?id=' . (int) $article['id']),
+                                            ) ?>"
 
                                             class="border border-slate-200 px-3 py-2 text-xs font-bold hover:border-[#C391EE] hover:text-[#9870bd]">Edit</a>
 
-                                        <form method="post" action="<?= e(url('admin/delete.php')) ?>" data-confirm="Delete this article permanently? This action cannot be undone.">
+                                        <form method="post" action="<?= e(
+                                            url('admin/delete.php'),
+                                        ) ?>" data-confirm="Delete this article permanently? This action cannot be undone.">
 
                                             <?= csrf_field() ?>
 
-                                            <input type="hidden" name="id" value="<?= e((string) $article['id']) ?>">
+                                            <input type="hidden" name="id" value="<?= e(
+                                                (string) $article['id'],
+                                            ) ?>">
 
                                             <button type="submit" class="border border-[#C391EE]/40 px-3 py-2 text-xs font-bold text-[#24104f] hover:bg-[#f8f4fc]">Delete</button>
 
@@ -501,41 +505,51 @@ require_once __DIR__ . '/../includes/header.php';
 
                 <p class="text-xs text-slate-500">
 
-                    Showing <?= number_format(min($totalRows, $offset + 1)) ?>–<?= number_format(min($totalRows, $offset + count($articles))) ?>
+                    Showing <?= number_format(min($totalRows, $offset + 1)) ?>–<?= number_format(
+    min($totalRows, $offset + count($articles)),
+) ?>
 
                     of <?= number_format($totalRows) ?> records
 
                 </p>
 
                 <?php
-
                 $paginationQuery = [];
 
                 if ($searchQuery !== '') {
-
                     $paginationQuery['q'] = $searchQuery;
                 }
 
                 if ($statusFilter !== '') {
-
                     $paginationQuery['status'] = $statusFilter;
                 }
-
                 ?>
 
                 <nav aria-label="Dashboard pagination" class="flex gap-2">
 
                     <?php if ($page > 1): ?>
 
-                        <a href="<?= e(url('admin/index.php?' . http_build_query($paginationQuery + ['page' => $page - 1]))) ?>" class="border border-slate-200 px-3 py-2 text-xs font-bold hover:border-[#C391EE]">← Previous</a>
+                        <a href="<?= e(
+                            url(
+                                'admin/index.php?' .
+                                    http_build_query($paginationQuery + ['page' => $page - 1]),
+                            ),
+                        ) ?>" class="border border-slate-200 px-3 py-2 text-xs font-bold hover:border-[#C391EE]">← Previous</a>
 
                     <?php endif; ?>
 
-                    <span class="px-3 py-2 text-xs font-bold text-slate-500">Page <?= e((string) $page) ?> of <?= e((string) $totalPages) ?></span>
+                    <span class="px-3 py-2 text-xs font-bold text-slate-500">Page <?= e(
+                        (string) $page,
+                    ) ?> of <?= e((string) $totalPages) ?></span>
 
                     <?php if ($page < $totalPages): ?>
 
-                        <a href="<?= e(url('admin/index.php?' . http_build_query($paginationQuery + ['page' => $page + 1]))) ?>" class="border border-slate-200 px-3 py-2 text-xs font-bold hover:border-[#C391EE]">Next →</a>
+                        <a href="<?= e(
+                            url(
+                                'admin/index.php?' .
+                                    http_build_query($paginationQuery + ['page' => $page + 1]),
+                            ),
+                        ) ?>" class="border border-slate-200 px-3 py-2 text-xs font-bold hover:border-[#C391EE]">Next →</a>
 
                     <?php endif; ?>
 

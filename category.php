@@ -30,11 +30,7 @@ $defaultCoverageImage = url('assets/images/coverage/default-legal.jpg');
 
 $slug = trim((string) ($_GET['slug'] ?? ''));
 
-if (
-    $slug === '' ||
-    strlen($slug) > 120 ||
-    !preg_match('/^[a-z0-9]+(?:-[a-z0-9]+)*$/', $slug)
-) {
+if ($slug === '' || strlen($slug) > 120 || !preg_match('/^[a-z0-9]+(?:-[a-z0-9]+)*$/', $slug)) {
     http_response_code(404);
     $slug = '';
 }
@@ -67,7 +63,7 @@ if ($slug !== '') {
         'SELECT id, name, slug, description
          FROM categories
          WHERE slug = :slug
-         LIMIT 1'
+         LIMIT 1',
     );
 
     $categoryStatement->execute([
@@ -93,8 +89,10 @@ if (!$category) {
     $pageDescription = trim((string) ($category['description'] ?? ''));
 
     if ($pageDescription === '') {
-        $pageDescription = 'Explore the latest legal developments, articles and analysis covering '
-            . $category['name'] . '.';
+        $pageDescription =
+            'Explore the latest legal developments, articles and analysis covering ' .
+            $category['name'] .
+            '.';
     }
 
     /*
@@ -109,7 +107,7 @@ if (!$category) {
          INNER JOIN categories c ON c.id = a.category_id
          WHERE c.id = :category_id
            AND a.status = 'published'
-           AND a.published_at <= NOW()"
+           AND a.published_at <= NOW()",
     );
 
     $countStatement->execute([
@@ -151,26 +149,14 @@ if (!$category) {
            AND a.status = 'published'
            AND a.published_at <= NOW()
          ORDER BY a.published_at DESC, a.id DESC
-         LIMIT :limit OFFSET :offset"
+         LIMIT :limit OFFSET :offset",
     );
 
-    $articleStatement->bindValue(
-        ':category_id',
-        (int) $category['id'],
-        PDO::PARAM_INT
-    );
+    $articleStatement->bindValue(':category_id', (int) $category['id'], PDO::PARAM_INT);
 
-    $articleStatement->bindValue(
-        ':limit',
-        $perPage,
-        PDO::PARAM_INT
-    );
+    $articleStatement->bindValue(':limit', $perPage, PDO::PARAM_INT);
 
-    $articleStatement->bindValue(
-        ':offset',
-        $offset,
-        PDO::PARAM_INT
-    );
+    $articleStatement->bindValue(':offset', $offset, PDO::PARAM_INT);
 
     $articleStatement->execute();
 
@@ -184,7 +170,7 @@ if (!$category) {
 */
 
 $categoryImage = $category
-    ? ($coverageImages[$category['slug']] ?? $defaultCoverageImage)
+    ? $coverageImages[$category['slug']] ?? $defaultCoverageImage
     : $defaultCoverageImage;
 
 require_once __DIR__ . '/includes/header.php';
@@ -306,9 +292,10 @@ require_once __DIR__ . '/includes/header.php';
                 <p class="mx-auto mt-7 max-w-2xl text-sm leading-8 text-white/80 md:text-base">
 
                     <?= e(
-                        $category['description']
-                            ?: 'Explore the latest legal developments, articles, judgments and thoughtful analysis in '
-                            . $category['name'] . '.'
+                        $category['description'] ?:
+                        'Explore the latest legal developments, articles, judgments and thoughtful analysis in ' .
+                            $category['name'] .
+                            '.',
                     ) ?>
 
                 </p>
@@ -431,10 +418,15 @@ require_once __DIR__ . '/includes/header.php';
                             <?php if ($page > 1): ?>
 
                                 <a
-                                    href="<?= e(url('category.php?' . http_build_query([
-                                                'slug' => $category['slug'],
-                                                'page' => $page - 1,
-                                            ]))) ?>"
+                                    href="<?= e(
+                                        url(
+                                            'category.php?' .
+                                                http_build_query([
+                                                    'slug' => $category['slug'],
+                                                    'page' => $page - 1,
+                                                ]),
+                                        ),
+                                    ) ?>"
                                     class="inline-flex h-11 items-center gap-2 rounded-full border border-black/10 px-5 text-xs font-semibold text-[#5e5865] transition hover:border-[#C391EE] hover:bg-[#f6f2fa] hover:text-[#9866c5]">
                                     ← Previous
                                 </a>
@@ -447,16 +439,25 @@ require_once __DIR__ . '/includes/header.php';
                             $endPage = min($totalPages, $page + 2);
                             ?>
 
-                            <?php for ($pageNumber = $startPage; $pageNumber <= $endPage; $pageNumber++): ?>
+                            <?php for (
+                                $pageNumber = $startPage;
+                                $pageNumber <= $endPage;
+                                $pageNumber++
+                            ): ?>
 
                                 <a
-                                    href="<?= e(url('category.php?' . http_build_query([
-                                                'slug' => $category['slug'],
-                                                'page' => $pageNumber,
-                                            ]))) ?>"
+                                    href="<?= e(
+                                        url(
+                                            'category.php?' .
+                                                http_build_query([
+                                                    'slug' => $category['slug'],
+                                                    'page' => $pageNumber,
+                                                ]),
+                                        ),
+                                    ) ?>"
                                     class="<?= $pageNumber === $page
-                                                ? 'border-[#C391EE] bg-[#C391EE] text-white shadow-[0_5px_15px_rgba(195,145,238,0.22)]'
-                                                : 'border-black/10 bg-white text-[#5e5865] hover:border-[#C391EE] hover:text-[#9866c5]' ?>
+                                        ? 'border-[#C391EE] bg-[#C391EE] text-white shadow-[0_5px_15px_rgba(195,145,238,0.22)]'
+                                        : 'border-black/10 bg-white text-[#5e5865] hover:border-[#C391EE] hover:text-[#9866c5]' ?>
                                         flex h-11 min-w-11 items-center justify-center rounded-full border px-4 text-xs font-semibold transition-all duration-300"
                                     <?= $pageNumber === $page ? 'aria-current="page"' : '' ?>>
 
@@ -470,10 +471,15 @@ require_once __DIR__ . '/includes/header.php';
                             <?php if ($page < $totalPages): ?>
 
                                 <a
-                                    href="<?= e(url('category.php?' . http_build_query([
-                                                'slug' => $category['slug'],
-                                                'page' => $page + 1,
-                                            ]))) ?>"
+                                    href="<?= e(
+                                        url(
+                                            'category.php?' .
+                                                http_build_query([
+                                                    'slug' => $category['slug'],
+                                                    'page' => $page + 1,
+                                                ]),
+                                        ),
+                                    ) ?>"
                                     class="inline-flex h-11 items-center gap-2 rounded-full border border-black/10 px-5 text-xs font-semibold text-[#5e5865] transition hover:border-[#C391EE] hover:bg-[#f6f2fa] hover:text-[#9866c5]">
                                     Next →
                                 </a>

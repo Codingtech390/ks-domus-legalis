@@ -36,12 +36,7 @@ if ($isProduction) {
     $dbUser = $productionConfig['user'] ?? '';
     $dbPass = $productionConfig['pass'] ?? '';
 
-    if (
-        $dbHost === '' ||
-        $dbName === '' ||
-        $dbUser === '' ||
-        $dbPass === ''
-    ) {
+    if ($dbHost === '' || $dbName === '' || $dbUser === '' || $dbPass === '') {
         throw new RuntimeException('Production database credentials are incomplete.');
     }
 } else {
@@ -64,7 +59,6 @@ define('BASE_URL', $isProduction ? '' : '/legal-news-portal');
 define('UPLOAD_DIR', __DIR__ . '/../assets/uploads/');
 define('MAX_UPLOAD_BYTES', 5 * 1024 * 1024);
 
-
 /*
 |--------------------------------------------------------------------------
 | Timezone
@@ -81,9 +75,10 @@ date_default_timezone_set('Asia/Kolkata');
 |--------------------------------------------------------------------------
 */
 
-$isHttps = isset($_SERVER['HTTPS'])
-    && $_SERVER['HTTPS'] !== ''
-    && strtolower((string) $_SERVER['HTTPS']) !== 'off';
+$isHttps =
+    isset($_SERVER['HTTPS']) &&
+    $_SERVER['HTTPS'] !== '' &&
+    strtolower((string) $_SERVER['HTTPS']) !== 'off';
 
 if (PHP_SAPI !== 'cli' && session_status() !== PHP_SESSION_ACTIVE) {
     ini_set('session.use_strict_mode', '1');
@@ -115,9 +110,7 @@ if (!defined('APP_INITIALIZED')) {
 */
 
 try {
-    $dsn = 'mysql:host=' . DB_HOST
-        . ';dbname=' . DB_NAME
-        . ';charset=utf8mb4';
+    $dsn = 'mysql:host=' . DB_HOST . ';dbname=' . DB_NAME . ';charset=utf8mb4';
 
     $pdo = new PDO($dsn, DB_USER, DB_PASS, [
         PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
@@ -134,18 +127,16 @@ try {
     $connectedDatabase = $databaseStatement->fetchColumn();
 
     if (!is_string($connectedDatabase) || $connectedDatabase === '') {
-        throw new RuntimeException(
-            'MySQL connected without selecting a database.'
-        );
+        throw new RuntimeException('MySQL connected without selecting a database.');
     }
 
     if ($connectedDatabase !== DB_NAME) {
         error_log(
-            'Database configuration warning: expected database "'
-            . DB_NAME
-            . '" but connected to "'
-            . $connectedDatabase
-            . '".'
+            'Database configuration warning: expected database "' .
+                DB_NAME .
+                '" but connected to "' .
+                $connectedDatabase .
+                '".',
         );
     }
 
@@ -153,22 +144,16 @@ try {
      * Log connection identity without logging passwords or credentials.
      */
     error_log(
-        'Database connection established: host='
-        . DB_HOST
-        . ', database='
-        . $connectedDatabase
+        'Database connection established: host=' . DB_HOST . ', database=' . $connectedDatabase,
     );
 } catch (Throwable $exception) {
-    error_log(
-        'Database initialization failed: '
-        . $exception->getMessage()
-    );
+    error_log('Database initialization failed: ' . $exception->getMessage());
 
     http_response_code(500);
 
     exit(
-        'Unable to initialize the database connection. '
-        . 'Check that MySQL is running and review the PHP error log.'
+        'Unable to initialize the database connection. ' .
+            'Check that MySQL is running and review the PHP error log.'
     );
 }
 
@@ -182,11 +167,7 @@ try {
 
 function e(mixed $value): string
 {
-    return htmlspecialchars(
-        (string) ($value ?? ''),
-        ENT_QUOTES | ENT_SUBSTITUTE,
-        'UTF-8'
-    );
+    return htmlspecialchars((string) ($value ?? ''), ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
 }
 
 /*
@@ -211,7 +192,7 @@ function url(string $path = ''): string
 function redirect(string $path): never
 {
     header('Location: ' . url($path));
-    exit;
+    exit();
 }
 
 /*
@@ -223,9 +204,9 @@ function redirect(string $path): never
 function csrf_token(): string
 {
     if (
-        !isset($_SESSION['_csrf_token'])
-        || !is_string($_SESSION['_csrf_token'])
-        || $_SESSION['_csrf_token'] === ''
+        !isset($_SESSION['_csrf_token']) ||
+        !is_string($_SESSION['_csrf_token']) ||
+        $_SESSION['_csrf_token'] === ''
     ) {
         $_SESSION['_csrf_token'] = bin2hex(random_bytes(32));
     }
@@ -238,9 +219,7 @@ function csrf_token(): string
  */
 function csrf_field(): string
 {
-    return '<input type="hidden" name="_csrf_token" value="'
-        . e(csrf_token())
-        . '">';
+    return '<input type="hidden" name="_csrf_token" value="' . e(csrf_token()) . '">';
 }
 
 /**
@@ -252,18 +231,15 @@ function verify_csrf(): void
     $stored = $_SESSION['_csrf_token'] ?? null;
 
     if (
-        !is_string($submitted)
-        || !is_string($stored)
-        || $submitted === ''
-        || $stored === ''
-        || !hash_equals($stored, $submitted)
+        !is_string($submitted) ||
+        !is_string($stored) ||
+        $submitted === '' ||
+        $stored === '' ||
+        !hash_equals($stored, $submitted)
     ) {
         http_response_code(403);
 
-        exit(
-            'Invalid or expired form token. '
-            . 'Please refresh the page and try again.'
-        );
+        exit('Invalid or expired form token. ' . 'Please refresh the page and try again.');
     }
 }
 
@@ -296,10 +272,10 @@ function get_flash(): ?array
     unset($_SESSION['_flash']);
 
     if (
-        !is_array($flash)
-        || !isset($flash['type'], $flash['message'])
-        || !is_scalar($flash['type'])
-        || !is_scalar($flash['message'])
+        !is_array($flash) ||
+        !isset($flash['type'], $flash['message']) ||
+        !is_scalar($flash['type']) ||
+        !is_scalar($flash['message'])
     ) {
         return null;
     }
@@ -324,11 +300,7 @@ function make_slug(string $title): string
     $title = trim($title);
 
     if (function_exists('iconv')) {
-        $converted = iconv(
-            'UTF-8',
-            'ASCII//TRANSLIT//IGNORE',
-            $title
-        );
+        $converted = iconv('UTF-8', 'ASCII//TRANSLIT//IGNORE', $title);
 
         if ($converted !== false) {
             $title = $converted;
@@ -340,9 +312,7 @@ function make_slug(string $title): string
     $slug = preg_replace('/[^a-z0-9]+/', '-', $slug) ?? '';
     $slug = trim($slug, '-');
 
-    return $slug !== ''
-        ? substr($slug, 0, 250)
-        : 'legal-article';
+    return $slug !== '' ? substr($slug, 0, 250) : 'legal-article';
 }
 
 /*
@@ -356,11 +326,7 @@ function make_slug(string $title): string
  */
 function reading_time(string $html): int
 {
-    $plainText = html_entity_decode(
-        strip_tags($html),
-        ENT_QUOTES | ENT_HTML5,
-        'UTF-8'
-    );
+    $plainText = html_entity_decode(strip_tags($html), ENT_QUOTES | ENT_HTML5, 'UTF-8');
 
     $wordCount = str_word_count($plainText);
 
@@ -384,9 +350,7 @@ function format_date(?string $date): string
 
     $timestamp = strtotime($date);
 
-    return $timestamp === false
-        ? 'Not published'
-        : date('M j, Y', $timestamp);
+    return $timestamp === false ? 'Not published' : date('M j, Y', $timestamp);
 }
 
 /*
@@ -412,11 +376,11 @@ function image_url(?string $image): string
      * Reject path-like or otherwise unexpected filenames.
      */
     if (
-        $filename === '.'
-        || $filename === '..'
-        || str_contains($filename, "\0")
-        || str_contains($filename, '/')
-        || str_contains($filename, '\\')
+        $filename === '.' ||
+        $filename === '..' ||
+        str_contains($filename, "\0") ||
+        str_contains($filename, '/') ||
+        str_contains($filename, '\\')
     ) {
         return url('assets/css/style.css');
     }
@@ -439,19 +403,17 @@ function image_url(?string $image): string
 /**
  * Allow only application-relative redirect destinations.
  */
-function safe_local_redirect(
-    string $path,
-    string $fallback = 'index.php'
-): never {
+function safe_local_redirect(string $path, string $fallback = 'index.php'): never
+{
     $path = trim($path);
 
     if (
-        $path === ''
-        || str_starts_with($path, '//')
-        || str_contains($path, '\\')
-        || str_contains($path, "\r")
-        || str_contains($path, "\n")
-        || preg_match('/^[a-z][a-z0-9+.-]*:/i', $path) === 1
+        $path === '' ||
+        str_starts_with($path, '//') ||
+        str_contains($path, '\\') ||
+        str_contains($path, "\r") ||
+        str_contains($path, "\n") ||
+        preg_match('/^[a-z][a-z0-9+.-]*:/i', $path) === 1
     ) {
         redirect($fallback);
     }

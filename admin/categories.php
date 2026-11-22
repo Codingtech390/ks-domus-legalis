@@ -45,7 +45,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $action = (string) ($_POST['action'] ?? '');
 
     try {
-
         /*
         |--------------------------------------------------------------------------
         | Create category
@@ -53,7 +52,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         */
 
         if ($action === 'create') {
-
             $name = trim((string) ($_POST['name'] ?? ''));
             $description = trim((string) ($_POST['description'] ?? ''));
 
@@ -61,15 +59,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $oldDescription = $description;
 
             if ($name === '' || mb_strlen($name) > 100) {
-                throw new RuntimeException(
-                    'Enter a category name of 1–100 characters.'
-                );
+                throw new RuntimeException('Enter a category name of 1–100 characters.');
             }
 
             if (mb_strlen($description) > 500) {
-                throw new RuntimeException(
-                    'The description cannot exceed 500 characters.'
-                );
+                throw new RuntimeException('The description cannot exceed 500 characters.');
             }
 
             $slug = make_slug($name);
@@ -77,7 +71,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $check = $pdo->prepare(
                 'SELECT id FROM categories
                  WHERE name = :name OR slug = :slug
-                 LIMIT 1'
+                 LIMIT 1',
             );
 
             $check->execute([
@@ -86,14 +80,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             ]);
 
             if ($check->fetch()) {
-                throw new RuntimeException(
-                    'A category with that name or URL slug already exists.'
-                );
+                throw new RuntimeException('A category with that name or URL slug already exists.');
             }
 
             $insert = $pdo->prepare(
                 'INSERT INTO categories (name, slug, description)
-                 VALUES (:name, :slug, :description)'
+                 VALUES (:name, :slug, :description)',
             );
 
             $insert->execute([
@@ -114,11 +106,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         */
 
         if ($action === 'rename') {
-
-            $categoryId = filter_var(
-                $_POST['category_id'] ?? null,
-                FILTER_VALIDATE_INT
-            );
+            $categoryId = filter_var($_POST['category_id'] ?? null, FILTER_VALIDATE_INT);
 
             $name = trim((string) ($_POST['name'] ?? ''));
             $description = trim((string) ($_POST['description'] ?? ''));
@@ -128,20 +116,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
 
             if ($name === '' || mb_strlen($name) > 100) {
-                throw new RuntimeException(
-                    'Enter a category name of 1–100 characters.'
-                );
+                throw new RuntimeException('Enter a category name of 1–100 characters.');
             }
 
             if (mb_strlen($description) > 500) {
-                throw new RuntimeException(
-                    'The description cannot exceed 500 characters.'
-                );
+                throw new RuntimeException('The description cannot exceed 500 characters.');
             }
 
-            $existingStatement = $pdo->prepare(
-                'SELECT id FROM categories WHERE id = :id LIMIT 1'
-            );
+            $existingStatement = $pdo->prepare('SELECT id FROM categories WHERE id = :id LIMIT 1');
 
             $existingStatement->execute([
                 'id' => $categoryId,
@@ -157,7 +139,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 'SELECT id FROM categories
                  WHERE (name = :name OR slug = :slug)
                    AND id <> :id
-                 LIMIT 1'
+                 LIMIT 1',
             );
 
             $duplicate->execute([
@@ -167,9 +149,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             ]);
 
             if ($duplicate->fetch()) {
-                throw new RuntimeException(
-                    'Another category already uses that name or slug.'
-                );
+                throw new RuntimeException('Another category already uses that name or slug.');
             }
 
             $update = $pdo->prepare(
@@ -177,7 +157,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                  SET name = :name,
                      slug = :slug,
                      description = :description
-                 WHERE id = :id'
+                 WHERE id = :id',
             );
 
             $update->execute([
@@ -199,18 +179,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         */
 
         if ($action === 'delete') {
-
-            $categoryId = filter_var(
-                $_POST['category_id'] ?? null,
-                FILTER_VALIDATE_INT
-            );
+            $categoryId = filter_var($_POST['category_id'] ?? null, FILTER_VALIDATE_INT);
 
             if (!is_int($categoryId) || $categoryId < 1) {
                 throw new RuntimeException('Invalid category selected.');
             }
 
             $countStatement = $pdo->prepare(
-                'SELECT COUNT(*) FROM articles WHERE category_id = :id'
+                'SELECT COUNT(*) FROM articles WHERE category_id = :id',
             );
 
             $countStatement->execute([
@@ -221,14 +197,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             if ($articleCount > 0) {
                 throw new RuntimeException(
-                    'This category is used by ' . $articleCount .
-                        ' article(s). Reassign those articles before deleting it.'
+                    'This category is used by ' .
+                        $articleCount .
+                        ' article(s). Reassign those articles before deleting it.',
                 );
             }
 
-            $delete = $pdo->prepare(
-                'DELETE FROM categories WHERE id = :id'
-            );
+            $delete = $pdo->prepare('DELETE FROM categories WHERE id = :id');
 
             $delete->execute([
                 'id' => $categoryId,
@@ -245,16 +220,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         throw new RuntimeException('Unsupported category action.');
     } catch (RuntimeException $exception) {
-
         $errors[] = $exception->getMessage();
     } catch (PDOException $exception) {
-
-        error_log(
-            'Category management failed: ' . $exception->getMessage()
-        );
+        error_log('Category management failed: ' . $exception->getMessage());
 
         if ($exception->getCode() === '23000') {
-            $errors[] = 'That category name or slug already exists, or the category is still in use.';
+            $errors[] =
+                'That category name or slug already exists, or the category is still in use.';
         } else {
             $errors[] = 'The category could not be saved. Please try again.';
         }
@@ -273,7 +245,7 @@ $categoryStatement = $pdo->query(
      FROM categories c
      LEFT JOIN articles a ON a.category_id = c.id
      GROUP BY c.id, c.name, c.slug, c.description
-     ORDER BY c.name ASC'
+     ORDER BY c.name ASC',
 );
 
 $categories = $categoryStatement->fetchAll(PDO::FETCH_ASSOC);
@@ -285,7 +257,6 @@ $categories = $categoryStatement->fetchAll(PDO::FETCH_ASSOC);
 */
 
 require_once __DIR__ . '/../includes/header.php';
-
 ?>
 
 <main class="min-h-screen bg-slate-50">
@@ -456,7 +427,9 @@ require_once __DIR__ . '/../includes/header.php';
                             maxlength="500"
                             rows="5"
                             placeholder="What kind of legal coverage belongs here?"
-                            class="w-full resize-y border border-slate-200 bg-white px-4 py-3 text-sm leading-6 text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-red-600 focus:ring-2 focus:ring-red-100"><?= e($oldDescription) ?></textarea>
+                            class="w-full resize-y border border-slate-200 bg-white px-4 py-3 text-sm leading-6 text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-red-600 focus:ring-2 focus:ring-red-100"><?= e(
+                                $oldDescription,
+                            ) ?></textarea>
 
                         <p class="mt-2 text-xs leading-5 text-slate-400">
                             Maximum 500 characters.
@@ -556,10 +529,8 @@ require_once __DIR__ . '/../includes/header.php';
                         <?php foreach ($categories as $category): ?>
 
                             <?php
-
                             $categoryId = (string) $category['id'];
                             $articleCount = (int) $category['article_count'];
-
                             ?>
 
                             <article class="min-w-0 p-5 transition hover:bg-slate-50/70 sm:p-6">
@@ -660,7 +631,9 @@ require_once __DIR__ . '/../includes/header.php';
                                                 name="description"
                                                 maxlength="500"
                                                 rows="2"
-                                                class="w-full resize-y border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900 outline-none transition focus:border-red-600 focus:ring-2 focus:ring-red-100"><?= e((string) ($category['description'] ?? '')) ?></textarea>
+                                                class="w-full resize-y border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900 outline-none transition focus:border-red-600 focus:ring-2 focus:ring-red-100"><?= e(
+                                                    (string) ($category['description'] ?? ''),
+                                                ) ?></textarea>
 
                                         </div>
 

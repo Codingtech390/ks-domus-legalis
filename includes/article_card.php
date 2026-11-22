@@ -12,16 +12,18 @@ if (!function_exists('article_card')) {
     {
         $articleUrl = url('post.php?slug=' . rawurlencode((string) $article['slug']));
 
-        $publishedDate = $article['published_at'] ?? $article['created_at'] ?? null;
+        $publishedDate = $article['published_at'] ?? ($article['created_at'] ?? null);
 
         $imageUrl = image_url($article['featured_image'] ?? null);
 
         $readingMins = reading_time((string) ($article['content'] ?? ''));
 
         $categoryUrl = url(
-            'index.php?' . http_build_query([
-                'category' => $article['category_slug'] ?? ''
-            ]) . '#latest-news'
+            'index.php?' .
+                http_build_query([
+                    'category' => $article['category_slug'] ?? '',
+                ]) .
+                '#latest-news',
         );
 
         $categoryName = trim((string) ($article['category_name'] ?? 'Legal Insights'));
@@ -34,19 +36,30 @@ if (!function_exists('article_card')) {
 
         // Topic-related placeholder images.
         $placeholderImages = [
-            'corporate' => 'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&w=1000&q=85',
-            'litigation' => 'https://images.unsplash.com/photo-1589829545856-d10d557cf95f?auto=format&fit=crop&w=1000&q=85',
-            'dispute' => 'https://images.unsplash.com/photo-1589829545856-d10d557cf95f?auto=format&fit=crop&w=1000&q=85',
-            'intellectual' => 'https://images.unsplash.com/photo-1455390582262-044cdead277a?auto=format&fit=crop&w=1000&q=85',
-            'technology' => 'https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&fit=crop&w=1000&q=85',
-            'real estate' => 'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&w=1000&q=85',
-            'employment' => 'https://images.unsplash.com/photo-1521737711867-e3b97375f902?auto=format&fit=crop&w=1000&q=85',
-            'tax' => 'https://images.unsplash.com/photo-1554224155-6726b3ff858f?auto=format&fit=crop&w=1000&q=85',
-            'banking' => 'https://images.unsplash.com/photo-1444653614773-995cb1ef9efa?auto=format&fit=crop&w=1000&q=85',
-            'environment' => 'https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05?auto=format&fit=crop&w=1000&q=85',
+            'corporate' =>
+                'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&w=1000&q=85',
+            'litigation' =>
+                'https://images.unsplash.com/photo-1589829545856-d10d557cf95f?auto=format&fit=crop&w=1000&q=85',
+            'dispute' =>
+                'https://images.unsplash.com/photo-1589829545856-d10d557cf95f?auto=format&fit=crop&w=1000&q=85',
+            'intellectual' =>
+                'https://images.unsplash.com/photo-1455390582262-044cdead277a?auto=format&fit=crop&w=1000&q=85',
+            'technology' =>
+                'https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&fit=crop&w=1000&q=85',
+            'real estate' =>
+                'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&w=1000&q=85',
+            'employment' =>
+                'https://images.unsplash.com/photo-1521737711867-e3b97375f902?auto=format&fit=crop&w=1000&q=85',
+            'tax' =>
+                'https://images.unsplash.com/photo-1554224155-6726b3ff858f?auto=format&fit=crop&w=1000&q=85',
+            'banking' =>
+                'https://images.unsplash.com/photo-1444653614773-995cb1ef9efa?auto=format&fit=crop&w=1000&q=85',
+            'environment' =>
+                'https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05?auto=format&fit=crop&w=1000&q=85',
         ];
 
-        $defaultImage = 'https://images.unsplash.com/photo-1589829545856-d10d557cf95f?auto=format&fit=crop&w=1000&q=85';
+        $defaultImage =
+            'https://images.unsplash.com/photo-1589829545856-d10d557cf95f?auto=format&fit=crop&w=1000&q=85';
 
         if ($imageUrl === '') {
             $normalizedCategory = strtolower($categoryName);
@@ -62,7 +75,7 @@ if (!function_exists('article_card')) {
         }
 
         $displayDate = format_date($publishedDate);
-?>
+        ?>
 
         <article class="group relative flex h-full min-w-0 flex-col overflow-hidden rounded-[5px] border border-black/[0.08] bg-white shadow-[0_5px_25px_rgba(25,16,38,0.045)] transition-all duration-500 ease-out hover:-translate-y-2 hover:border-[#C391EE]/50 hover:shadow-[0_25px_65px_rgba(25,16,38,0.13)]">
 

@@ -1,10 +1,6 @@
 <?php
 
-
-
 require_once __DIR__ . '/../includes/auth_check.php';
-
-
 
 $pageTitle = 'Casework Management';
 
@@ -12,18 +8,11 @@ $pageDescription = 'Manage important cases and pro bono work.';
 
 $isAdminPage = true;
 
-
-
 $errors = [];
-
-
 
 $allowedTypes = ['important', 'pro_bono'];
 
-
-
 $values = [
-
     'case_type' => 'important',
 
     'title' => '',
@@ -45,27 +34,17 @@ $values = [
     'status' => 'draft',
 
     'display_order' => '0',
-
 ];
-
-
 
 $editId = filter_input(INPUT_GET, 'edit', FILTER_VALIDATE_INT);
 
 $editId = is_int($editId) && $editId > 0 ? $editId : 0;
 
-
-
 $activeType = (string) ($_GET['type'] ?? 'all');
 
-
-
 if (!in_array($activeType, ['all', 'important', 'pro_bono'], true)) {
-
     $activeType = 'all';
 }
-
-
 
 /**
 
@@ -77,17 +56,10 @@ if (!in_array($activeType, ['all', 'important', 'pro_bono'], true)) {
 
  */
 
-
-
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-
     verify_csrf();
 
-
-
     $action = (string) ($_POST['action'] ?? '');
-
-
 
     if ($action === 'delete') {
         $rawId = trim((string) ($_POST['id'] ?? ''));
@@ -99,9 +71,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         $id = (int) $rawId;
 
-        $deleteStatement = $pdo->prepare(
-            'DELETE FROM case_highlights WHERE id = :id'
-        );
+        $deleteStatement = $pdo->prepare('DELETE FROM case_highlights WHERE id = :id');
 
         $deleteStatement->execute(['id' => $id]);
 
@@ -115,23 +85,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     if ($action === 'save') {
-
         $rawId = trim((string) ($_POST['id'] ?? '0'));
 
-        if (
-            $rawId !== '0'
-            && (!ctype_digit($rawId) || (int) $rawId < 1)
-        ) {
+        if ($rawId !== '0' && (!ctype_digit($rawId) || (int) $rawId < 1)) {
             $errors[] = 'Invalid case record ID.';
             $id = 0;
         } else {
             $id = (int) $rawId;
         }
 
-
-
         $values = [
-
             'case_type' => trim((string) ($_POST['case_type'] ?? '')),
 
             'title' => trim((string) ($_POST['title'] ?? '')),
@@ -153,27 +116,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             'status' => trim((string) ($_POST['status'] ?? 'draft')),
 
             'display_order' => trim((string) ($_POST['display_order'] ?? '0')),
-
         ];
 
-
-
         if (!in_array($values['case_type'], $allowedTypes, true)) {
-
             $errors[] = 'Select a valid casework category.';
         }
 
-
-
         if ($values['title'] === '' || mb_strlen($values['title']) > 255) {
-
             $errors[] = 'Enter a title of up to 255 characters.';
         }
 
-
-
         if ($values['summary'] === '') {
-
             $errors[] = 'A summary is required.';
         }
 
@@ -189,170 +142,90 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $errors[] = 'The public reference URL must be 500 characters or fewer.';
         }
 
-
-
         if (mb_strlen($values['court']) > 180) {
-
             $errors[] = 'Court name must be 180 characters or fewer.';
         }
 
-
-
         if (mb_strlen($values['case_reference']) > 180) {
-
             $errors[] = 'Case reference must be 180 characters or fewer.';
         }
 
-
-
         if (mb_strlen($values['role_description']) > 500) {
-
             $errors[] = 'Role description must be 500 characters or fewer.';
         }
 
-
-
         if (!in_array($values['status'], ['draft', 'published'], true)) {
-
             $errors[] = 'Select a valid publication status.';
         }
 
-
-
         if (
-
-            $values['decision_year'] !== ''
-
-            && (
-
-                !ctype_digit($values['decision_year'])
-
-                || (int) $values['decision_year'] < 1800
-
-                || (int) $values['decision_year'] > 2100
-
-            )
-
+            $values['decision_year'] !== '' &&
+            (!ctype_digit($values['decision_year']) ||
+                (int) $values['decision_year'] < 1800 ||
+                (int) $values['decision_year'] > 2100)
         ) {
-
             $errors[] = 'Enter a valid year between 1800 and 2100.';
         }
 
-
-
         if (
-
-            $values['display_order'] === ''
-
-            || !preg_match('/^-?\d{1,6}$/', $values['display_order'])
-
+            $values['display_order'] === '' ||
+            !preg_match('/^-?\d{1,6}$/', $values['display_order'])
         ) {
-
             $errors[] = 'Display order must be a valid integer.';
         }
 
-
-
         if (
-
-            $values['public_url'] !== ''
-
-            && (
-
-                !filter_var($values['public_url'], FILTER_VALIDATE_URL)
-
-                || !in_array(
-
+            $values['public_url'] !== '' &&
+            (!filter_var($values['public_url'], FILTER_VALIDATE_URL) ||
+                !in_array(
                     strtolower((string) parse_url($values['public_url'], PHP_URL_SCHEME)),
 
                     ['http', 'https'],
 
-                    true
-
-                )
-
-            )
-
+                    true,
+                ))
         ) {
-
             $errors[] = 'The public reference must be a valid HTTP or HTTPS URL.';
         }
 
-
-
         if (!$errors) {
-
-            $year = $values['decision_year'] !== ''
-
-                ? (int) $values['decision_year']
-
-                : null;
-
-
+            $year = $values['decision_year'] !== '' ? (int) $values['decision_year'] : null;
 
             $data = [
-
                 'case_type' => $values['case_type'],
 
                 'title' => $values['title'],
 
                 'court' => $values['court'] !== '' ? $values['court'] : null,
 
-                'case_reference' => $values['case_reference'] !== ''
-
-                    ? $values['case_reference']
-
-                    : null,
+                'case_reference' =>
+                    $values['case_reference'] !== '' ? $values['case_reference'] : null,
 
                 'decision_year' => $year,
 
-                'role_description' => $values['role_description'] !== ''
-
-                    ? $values['role_description']
-
-                    : null,
+                'role_description' =>
+                    $values['role_description'] !== '' ? $values['role_description'] : null,
 
                 'summary' => $values['summary'],
 
-                'outcome' => $values['outcome'] !== ''
+                'outcome' => $values['outcome'] !== '' ? $values['outcome'] : null,
 
-                    ? $values['outcome']
-
-                    : null,
-
-                'public_url' => $values['public_url'] !== ''
-
-                    ? $values['public_url']
-
-                    : null,
+                'public_url' => $values['public_url'] !== '' ? $values['public_url'] : null,
 
                 'status' => $values['status'],
 
                 'display_order' => (int) $values['display_order'],
-
             ];
 
-
-
             if ($id > 0) {
-
-                $checkStatement = $pdo->prepare(
-
-                    'SELECT id FROM case_highlights WHERE id = :id'
-
-                );
+                $checkStatement = $pdo->prepare('SELECT id FROM case_highlights WHERE id = :id');
 
                 $checkStatement->execute(['id' => $id]);
 
-
-
                 if (!$checkStatement->fetchColumn()) {
-
                     $errors[] = 'The record you are editing no longer exists.';
                 } else {
-
                     $updateStatement = $pdo->prepare(
-
                         'UPDATE case_highlights
 
                          SET case_type = :case_type,
@@ -377,18 +250,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                              display_order = :display_order
 
-                         WHERE id = :id'
-
+                         WHERE id = :id',
                     );
-
-
 
                     $updateStatement->execute($data + ['id' => $id]);
                 }
             } else {
-
                 $insertStatement = $pdo->prepare(
-
                     'INSERT INTO case_highlights (
 
                         case_type,
@@ -441,48 +309,30 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                         :created_by
 
-                    )'
-
+                    )',
                 );
 
-
-
                 $insertStatement->execute(
-
                     $data + [
-
                         'created_by' => (int) $_SESSION['admin_id'],
-
-                    ]
-
+                    ],
                 );
             }
 
-
-
             if (!$errors) {
-
                 set_flash(
-
                     'success',
 
                     $id > 0
-
                         ? 'Case record updated successfully.'
-
-                        : 'Case record added successfully.'
-
+                        : 'Case record added successfully.',
                 );
-
-
 
                 redirect('admin/case-highlights.php?type=' . urlencode($values['case_type']));
             }
         }
     }
 }
-
-
 
 /**
 
@@ -494,39 +344,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
  */
 
-
-
 if ($editId > 0 && $_SERVER['REQUEST_METHOD'] !== 'POST') {
-
-    $editStatement = $pdo->prepare(
-
-        'SELECT * FROM case_highlights WHERE id = :id LIMIT 1'
-
-    );
-
-
+    $editStatement = $pdo->prepare('SELECT * FROM case_highlights WHERE id = :id LIMIT 1');
 
     $editStatement->execute(['id' => $editId]);
 
     $editRecord = $editStatement->fetch(PDO::FETCH_ASSOC);
 
-
-
     if ($editRecord) {
-
         foreach ($values as $key => $value) {
-
             $values[$key] = (string) ($editRecord[$key] ?? $value);
         }
     } else {
-
         set_flash('error', 'The requested case record was not found.');
 
         redirect('admin/case-highlights.php');
     }
 }
-
-
 
 /**
 
@@ -538,46 +372,33 @@ if ($editId > 0 && $_SERVER['REQUEST_METHOD'] !== 'POST') {
 
  */
 
+$importantCount = (int) $pdo
+    ->query(
+        "SELECT COUNT(*) FROM case_highlights
 
+     WHERE case_type = 'important' AND status = 'published'",
+    )
+    ->fetchColumn();
 
-$importantCount = (int) $pdo->query(
+$proBonoCount = (int) $pdo
+    ->query(
+        "SELECT COUNT(*) FROM case_highlights
 
-    "SELECT COUNT(*) FROM case_highlights
-
-     WHERE case_type = 'important' AND status = 'published'"
-
-)->fetchColumn();
-
-
-
-$proBonoCount = (int) $pdo->query(
-
-    "SELECT COUNT(*) FROM case_highlights
-
-     WHERE case_type = 'pro_bono' AND status = 'published'"
-
-)->fetchColumn();
-
-
+     WHERE case_type = 'pro_bono' AND status = 'published'",
+    )
+    ->fetchColumn();
 
 $sql = 'SELECT * FROM case_highlights';
 
 $params = [];
 
-
-
 if ($activeType !== 'all') {
-
     $sql .= ' WHERE case_type = :case_type';
 
     $params['case_type'] = $activeType;
 }
 
-
-
 $sql .= ' ORDER BY display_order ASC, decision_year DESC, id DESC';
-
-
 
 $listStatement = $pdo->prepare($sql);
 
@@ -585,12 +406,7 @@ $listStatement->execute($params);
 
 $records = $listStatement->fetchAll(PDO::FETCH_ASSOC);
 
-
-
 require_once __DIR__ . '/../includes/header.php';
-
-
-
 ?>
 
 
@@ -715,7 +531,9 @@ require_once __DIR__ . '/../includes/header.php';
 
             method="post"
 
-            action="<?= e(url('admin/case-highlights.php' . ($editId > 0 ? '?edit=' . $editId : ''))) ?>"
+            action="<?= e(
+                url('admin/case-highlights.php' . ($editId > 0 ? '?edit=' . $editId : '')),
+            ) ?>"
 
             class="space-y-6 p-6">
 
@@ -779,7 +597,9 @@ require_once __DIR__ . '/../includes/header.php';
 
 
 
-                        <option value="important" <?= $values['case_type'] === 'important' ? 'selected' : '' ?>>
+                        <option value="important" <?= $values['case_type'] === 'important'
+                            ? 'selected'
+                            : '' ?>>
 
                             Important cases
 
@@ -787,7 +607,9 @@ require_once __DIR__ . '/../includes/header.php';
 
 
 
-                        <option value="pro_bono" <?= $values['case_type'] === 'pro_bono' ? 'selected' : '' ?>>
+                        <option value="pro_bono" <?= $values['case_type'] === 'pro_bono'
+                            ? 'selected'
+                            : '' ?>>
 
                             Pro bono / public interest
 
@@ -823,7 +645,9 @@ require_once __DIR__ . '/../includes/header.php';
 
 
 
-                        <option value="draft" <?= $values['status'] === 'draft' ? 'selected' : '' ?>>
+                        <option value="draft" <?= $values['status'] === 'draft'
+                            ? 'selected'
+                            : '' ?>>
 
                             Draft — hidden from website
 
@@ -831,7 +655,9 @@ require_once __DIR__ . '/../includes/header.php';
 
 
 
-                        <option value="published" <?= $values['status'] === 'published' ? 'selected' : '' ?>>
+                        <option value="published" <?= $values['status'] === 'published'
+                            ? 'selected'
+                            : '' ?>>
 
                             Published — visible on website
 
@@ -1033,7 +859,9 @@ require_once __DIR__ . '/../includes/header.php';
 
                     placeholder="Explain the legal issue and background in clear, concise language."
 
-                    class="w-full border border-slate-200 px-4 py-3 text-sm leading-7 outline-none focus:border-[#9870bd]"><?= e($values['summary']) ?></textarea>
+                    class="w-full border border-slate-200 px-4 py-3 text-sm leading-7 outline-none focus:border-[#9870bd]"><?= e(
+                        $values['summary'],
+                    ) ?></textarea>
 
             </label>
 
@@ -1059,7 +887,9 @@ require_once __DIR__ . '/../includes/header.php';
 
                     placeholder="Describe the judgment, result or public-interest impact, where appropriate."
 
-                    class="w-full border border-slate-200 px-4 py-3 text-sm leading-7 outline-none focus:border-[#9870bd]"><?= e($values['outcome']) ?></textarea>
+                    class="w-full border border-slate-200 px-4 py-3 text-sm leading-7 outline-none focus:border-[#9870bd]"><?= e(
+                        $values['outcome'],
+                    ) ?></textarea>
 
             </label>
 
@@ -1223,7 +1053,9 @@ require_once __DIR__ . '/../includes/header.php';
 
                         href="<?= e(url('admin/case-highlights.php')) ?>"
 
-                        class="border px-4 py-2 <?= $activeType === 'all' ? 'border-[#24104f] bg-[#24104f] text-white' : 'border-slate-200 text-slate-600 hover:border-[#C391EE]' ?>">
+                        class="border px-4 py-2 <?= $activeType === 'all'
+                            ? 'border-[#24104f] bg-[#24104f] text-white'
+                            : 'border-slate-200 text-slate-600 hover:border-[#C391EE]' ?>">
 
                         All
 
@@ -1235,7 +1067,9 @@ require_once __DIR__ . '/../includes/header.php';
 
                         href="<?= e(url('admin/case-highlights.php?type=important')) ?>"
 
-                        class="border px-4 py-2 <?= $activeType === 'important' ? 'border-[#24104f] bg-[#24104f] text-white' : 'border-slate-200 text-slate-600 hover:border-[#C391EE]' ?>">
+                        class="border px-4 py-2 <?= $activeType === 'important'
+                            ? 'border-[#24104f] bg-[#24104f] text-white'
+                            : 'border-slate-200 text-slate-600 hover:border-[#C391EE]' ?>">
 
                         Important cases
 
@@ -1247,7 +1081,9 @@ require_once __DIR__ . '/../includes/header.php';
 
                         href="<?= e(url('admin/case-highlights.php?type=pro_bono')) ?>"
 
-                        class="border px-4 py-2 <?= $activeType === 'pro_bono' ? 'border-[#24104f] bg-[#24104f] text-white' : 'border-slate-200 text-slate-600 hover:border-[#C391EE]' ?>">
+                        class="border px-4 py-2 <?= $activeType === 'pro_bono'
+                            ? 'border-[#24104f] bg-[#24104f] text-white'
+                            : 'border-slate-200 text-slate-600 hover:border-[#C391EE]' ?>">
 
                         Pro bono
 
@@ -1357,7 +1193,9 @@ require_once __DIR__ . '/../includes/header.php';
 
                                 <td class="px-5 py-4 text-xs font-semibold text-[#9870bd]">
 
-                                    <?= $record['case_type'] === 'pro_bono' ? 'Pro bono' : 'Important case' ?>
+                                    <?= $record['case_type'] === 'pro_bono'
+                                        ? 'Pro bono'
+                                        : 'Important case' ?>
 
                                 </td>
 
@@ -1373,7 +1211,11 @@ require_once __DIR__ . '/../includes/header.php';
 
                                 <td class="px-5 py-4">
 
-                                    <span class="inline-flex px-3 py-1 text-[10px] font-bold uppercase tracking-wider <?= $record['status'] === 'published' ? 'bg-[#f0e7fa] text-[#60358c]' : 'bg-amber-50 text-amber-700' ?>">
+                                    <span class="inline-flex px-3 py-1 text-[10px] font-bold uppercase tracking-wider <?= $record[
+                                        'status'
+                                    ] === 'published'
+                                        ? 'bg-[#f0e7fa] text-[#60358c]'
+                                        : 'bg-amber-50 text-amber-700' ?>">
 
                                         <?= e($record['status']) ?>
 
@@ -1391,7 +1233,12 @@ require_once __DIR__ . '/../includes/header.php';
 
                                         <a
 
-                                            href="<?= e(url('admin/case-highlights.php?edit=' . (int) $record['id'])) ?>"
+                                            href="<?= e(
+                                                url(
+                                                    'admin/case-highlights.php?edit=' .
+                                                        (int) $record['id'],
+                                                ),
+                                            ) ?>"
 
                                             class="border border-slate-200 px-3 py-2 text-xs font-semibold text-[#24104f] hover:border-[#C391EE]">
 
@@ -1417,7 +1264,9 @@ require_once __DIR__ . '/../includes/header.php';
 
                                             <input type="hidden" name="action" value="delete">
 
-                                            <input type="hidden" name="id" value="<?= e((string) $record['id']) ?>">
+                                            <input type="hidden" name="id" value="<?= e(
+                                                (string) $record['id'],
+                                            ) ?>">
 
 
 

@@ -1,166 +1,65 @@
 <?php
 
-
-
-
-
-
-
-
-
-
 require_once __DIR__ . '/config/database.php';
 
 require_once __DIR__ . '/includes/article_card.php';
 
-
-
-
-
-
-
 $pageTitle = 'Legal News, Court Judgments & Analysis';
 
-$pageDescription = 'Stay informed with legal news, court judgments, legislation and expert legal analysis.';
-
-
-
-
-
-
+$pageDescription =
+    'Stay informed with legal news, court judgments, legislation and expert legal analysis.';
 
 $searchQuery = trim((string) ($_GET['q'] ?? ''));
 
 $activeCategory = trim((string) ($_GET['category'] ?? ''));
 
-
-
-
-
-
-
 if (strlen($searchQuery) > 150) {
-
     $searchQuery = substr($searchQuery, 0, 150);
 }
 
-
-
-
-
 if (strlen($activeCategory) > 120) {
-
-
-
     $activeCategory = '';
 }
-
-
-
-
 
 $page = filter_input(INPUT_GET, 'page', FILTER_VALIDATE_INT);
 
 $page = is_int($page) && $page > 0 ? $page : 1;
 
-
-
 $perPage = 9;
 
 $offset = ($page - 1) * $perPage;
 
-
-
 $categoryStatement = $pdo->query(
-
-
-
-    'SELECT id, name, slug, description FROM categories ORDER BY name ASC'
-
-
-
+    'SELECT id, name, slug, description FROM categories ORDER BY name ASC',
 );
-
-
 
 $allCategories = $categoryStatement->fetchAll();
 
-
-
-
-
-
-
 $where = ["a.status = 'published'", 'a.published_at <= NOW()'];
-
-
 
 $params = [];
 
-
-
-
-
-
-
 if ($searchQuery !== '') {
-
-
-
     $where[] = '(a.title LIKE :q_title OR a.excerpt LIKE :q_excerpt OR a.content LIKE :q_content)';
-
-
 
     $searchTerm = '%' . $searchQuery . '%';
 
-
-
     $params['q_title'] = $searchTerm;
 
-
-
     $params['q_excerpt'] = $searchTerm;
-
-
 
     $params['q_content'] = $searchTerm;
 }
 
-
-
-
-
-
-
 if ($activeCategory !== '') {
-
-
-
     $where[] = 'c.slug = :category_slug';
-
-
 
     $params['category_slug'] = $activeCategory;
 }
 
-
-
-
-
-
-
 $whereSql = implode(' AND ', $where);
 
-
-
-
-
-
-
 $countStatement = $pdo->prepare(
-
-
-
     "SELECT COUNT(*)
 
 
@@ -173,55 +72,22 @@ $countStatement = $pdo->prepare(
 
 
 
-     WHERE $whereSql"
-
-
-
+     WHERE $whereSql",
 );
-
-
 
 $countStatement->execute($params);
 
-
-
-
-
-
-
 $totalArticles = (int) $countStatement->fetchColumn();
-
-
 
 $totalPages = max(1, (int) ceil($totalArticles / $perPage));
 
-
-
-
-
-
-
 if ($page > $totalPages) {
-
-
-
     $page = $totalPages;
-
-
 
     $offset = ($page - 1) * $perPage;
 }
 
-
-
-
-
-
-
 $listStatement = $pdo->prepare(
-
-
-
     "SELECT a.id, a.title, a.slug, a.excerpt, a.featured_image,
 
 
@@ -258,71 +124,26 @@ $listStatement = $pdo->prepare(
 
 
 
-     LIMIT :limit OFFSET :offset"
-
-
-
+     LIMIT :limit OFFSET :offset",
 );
 
-
-
-
-
-
-
 foreach ($params as $key => $value) {
-
-
-
     $listStatement->bindValue(':' . $key, $value, PDO::PARAM_STR);
 }
 
-
-
-
-
-
-
 $listStatement->bindValue(':limit', $perPage, PDO::PARAM_INT);
-
-
 
 $listStatement->bindValue(':offset', $offset, PDO::PARAM_INT);
 
-
-
 $listStatement->execute();
-
-
-
-
-
-
 
 $articles = $listStatement->fetchAll();
 
-
-
-
-
-
-
 $displayTotal = $totalArticles;
 
-
-
-
-
-
-
-
-
-
-
-
-$caseHighlights = $pdo->query(
-
-    "SELECT
+$caseHighlights = $pdo
+    ->query(
+        "SELECT
 
         id,
 
@@ -348,36 +169,27 @@ $caseHighlights = $pdo->query(
 
      WHERE status = 'published'
 
-     ORDER BY case_type ASC, display_order ASC, decision_year DESC, id DESC"
+     ORDER BY case_type ASC, display_order ASC, decision_year DESC, id DESC",
+    )
+    ->fetchAll(PDO::FETCH_ASSOC);
 
-)->fetchAll(PDO::FETCH_ASSOC);
+$importantCases = array_values(
+    array_filter(
+        $caseHighlights,
 
+        static fn(array $case): bool => $case['case_type'] === 'important',
+    ),
+);
 
+$proBonoCases = array_values(
+    array_filter(
+        $caseHighlights,
 
-$importantCases = array_values(array_filter(
-
-    $caseHighlights,
-
-    static fn(array $case): bool => $case['case_type'] === 'important'
-
-));
-
-
-
-$proBonoCases = array_values(array_filter(
-
-    $caseHighlights,
-
-    static fn(array $case): bool => $case['case_type'] === 'pro_bono'
-
-));
-
-
-
-
+        static fn(array $case): bool => $case['case_type'] === 'pro_bono',
+    ),
+);
 
 require_once __DIR__ . '/includes/header.php';
-
 ?>
 
 <?php require __DIR__ . '/includes/home_carousel.php'; ?>
@@ -455,7 +267,9 @@ require_once __DIR__ . '/includes/header.php';
                                 <div class="mb-6 flex items-center justify-between gap-3">
 
                                     <span class="flex h-10 w-10 items-center justify-center rounded-full border border-[#C391EE]/40 bg-[#f8f4fc] text-xs font-bold text-[#9870bd]">
-                                        <?= e(str_pad((string) ($index + 1), 2, '0', STR_PAD_LEFT)) ?>
+                                        <?= e(
+                                            str_pad((string) ($index + 1), 2, '0', STR_PAD_LEFT),
+                                        ) ?>
                                     </span>
 
                                     <?php if (!empty($case['decision_year'])): ?>
@@ -759,7 +573,9 @@ require_once __DIR__ . '/includes/header.php';
 
                 <p class="mt-5 text-sm leading-8 text-[#77717e] md:text-base">
 
-                    <span class="font-semibold text-[#211c29]"><?= number_format($displayTotal) ?></span>
+                    <span class="font-semibold text-[#211c29]"><?= number_format(
+                        $displayTotal,
+                    ) ?></span>
 
                     article<?= $displayTotal === 1 ? '' : 's' ?> in the journal
 
@@ -798,14 +614,14 @@ require_once __DIR__ . '/includes/header.php';
                         href="<?= e(url('index.php#latest-news')) ?>"
 
                         class="<?= $activeCategory === '' && $searchQuery === ''
-
-                                    ? 'border-[#C391EE] bg-[#C391EE] text-white shadow-[0_5px_15px_rgba(195,145,238,0.22)]'
-
-                                    : 'border-black/[0.10] bg-white text-[#5e5865] hover:border-[#C391EE] hover:text-[#9866c5]' ?>
+                            ? 'border-[#C391EE] bg-[#C391EE] text-white shadow-[0_5px_15px_rgba(195,145,238,0.22)]'
+                            : 'border-black/[0.10] bg-white text-[#5e5865] hover:border-[#C391EE] hover:text-[#9866c5]' ?>
 
                             inline-flex items-center rounded-full border px-4 py-2.5 text-xs font-semibold transition-all duration-300"
 
-                        <?= $activeCategory === '' && $searchQuery === '' ? 'aria-current="page"' : '' ?>>
+                        <?= $activeCategory === '' && $searchQuery === ''
+                            ? 'aria-current="page"'
+                            : '' ?>>
 
                         All articles
 
@@ -819,17 +635,23 @@ require_once __DIR__ . '/includes/header.php';
 
                         <a
 
-                            href="<?= e(url('index.php?' . http_build_query(['category' => $category['slug']]) . '#latest-news')) ?>"
+                            href="<?= e(
+                                url(
+                                    'index.php?' .
+                                        http_build_query(['category' => $category['slug']]) .
+                                        '#latest-news',
+                                ),
+                            ) ?>"
 
                             class="<?= $activeCategory === $category['slug']
-
-                                        ? 'border-[#C391EE] bg-[#C391EE] text-white shadow-[0_5px_15px_rgba(195,145,238,0.22)]'
-
-                                        : 'border-black/[0.10] bg-white text-[#5e5865] hover:border-[#C391EE] hover:text-[#9866c5]' ?>
+                                ? 'border-[#C391EE] bg-[#C391EE] text-white shadow-[0_5px_15px_rgba(195,145,238,0.22)]'
+                                : 'border-black/[0.10] bg-white text-[#5e5865] hover:border-[#C391EE] hover:text-[#9866c5]' ?>
 
                                 inline-flex items-center rounded-full border px-4 py-2.5 text-xs font-semibold transition-all duration-300"
 
-                            <?= $activeCategory === $category['slug'] ? 'aria-current="page"' : '' ?>>
+                            <?= $activeCategory === $category['slug']
+                                ? 'aria-current="page"'
+                                : '' ?>>
 
                             <?= e($category['name']) ?>
 
@@ -945,29 +767,19 @@ require_once __DIR__ . '/includes/header.php';
 
 
                 <?php
-
                 $pageParams = [];
 
-
-
                 if ($searchQuery !== '') {
-
                     $pageParams['q'] = $searchQuery;
                 }
 
-
-
                 if ($activeCategory !== '') {
-
                     $pageParams['category'] = $activeCategory;
                 }
-
-
 
                 $startPage = max(1, $page - 2);
 
                 $endPage = min($totalPages, $page + 2);
-
                 ?>
 
 
@@ -986,7 +798,13 @@ require_once __DIR__ . '/includes/header.php';
 
                         <a
 
-                            href="<?= e(url('index.php?' . http_build_query($pageParams + ['page' => $page - 1]) . '#latest-news')) ?>"
+                            href="<?= e(
+                                url(
+                                    'index.php?' .
+                                        http_build_query($pageParams + ['page' => $page - 1]) .
+                                        '#latest-news',
+                                ),
+                            ) ?>"
 
                             class="inline-flex h-11 items-center gap-2 rounded-full border border-black/10 px-5 text-xs font-semibold text-[#5e5865] transition-all hover:border-[#C391EE] hover:bg-[#f6f2fa] hover:text-[#9866c5]">
 
@@ -1006,19 +824,11 @@ require_once __DIR__ . '/includes/header.php';
 
 
 
-                        <?php
-
-                        $pageUrl = url(
-
+                        <?php $pageUrl = url(
                             'index.php?' .
-
                                 http_build_query($pageParams + ['page' => $pageNumber]) .
-
-                                '#latest-news'
-
-                        );
-
-                        ?>
+                                '#latest-news',
+                        ); ?>
 
 
 
@@ -1027,10 +837,8 @@ require_once __DIR__ . '/includes/header.php';
                             href="<?= e($pageUrl) ?>"
 
                             class="<?= $pageNumber === $page
-
-                                        ? 'border-[#C391EE] bg-[#C391EE] text-white shadow-[0_5px_15px_rgba(195,145,238,0.22)]'
-
-                                        : 'border-black/10 bg-white text-[#5e5865] hover:border-[#C391EE] hover:text-[#9866c5]' ?>
+                                ? 'border-[#C391EE] bg-[#C391EE] text-white shadow-[0_5px_15px_rgba(195,145,238,0.22)]'
+                                : 'border-black/10 bg-white text-[#5e5865] hover:border-[#C391EE] hover:text-[#9866c5]' ?>
 
                                 flex h-11 min-w-11 items-center justify-center rounded-full border px-4 text-xs font-semibold transition-all duration-300"
 
@@ -1054,7 +862,13 @@ require_once __DIR__ . '/includes/header.php';
 
                         <a
 
-                            href="<?= e(url('index.php?' . http_build_query($pageParams + ['page' => $page + 1]) . '#latest-news')) ?>"
+                            href="<?= e(
+                                url(
+                                    'index.php?' .
+                                        http_build_query($pageParams + ['page' => $page + 1]) .
+                                        '#latest-news',
+                                ),
+                            ) ?>"
 
                             class="inline-flex h-11 items-center gap-2 rounded-full border border-black/10 px-5 text-xs font-semibold text-[#5e5865] transition-all hover:border-[#C391EE] hover:bg-[#f6f2fa] hover:text-[#9866c5]">
 
@@ -1144,320 +958,11 @@ require_once __DIR__ . '/includes/header.php';
 
 
 </section>
-<!-- WHY CHOOSE US -->
 
-<section class="ks-section relative overflow-hidden bg-[#f8f6fb] py-20 md:py-28 lg:py-32" id="why-choose-us">
 
-
-
-    <div class="site-container">
-        <!-- CENTERED SECTION HEADING -->
-
-        <div class="mx-auto mb-14 max-w-3xl text-center md:mb-16">
-
-
-
-            <span class="ks-kicker inline-flex items-center justify-center gap-3">
-
-                <span class="h-px w-8 bg-[#C391EE]"></span>
-
-                03 / OUR APPROACH
-
-                <span class="h-px w-8 bg-[#C391EE]"></span>
-
-            </span>
-
-
-
-            <h2 class="mt-6 text-4xl font-semibold leading-[1.1] tracking-[-0.045em] text-[#211c29] sm:text-5xl lg:text-6xl">
-
-                Law in context.
-
-                <span class="block text-[#9870bd]">Ideas made clear.</span>
-
-            </h2>
-
-
-
-            <p class="mx-auto mt-6 max-w-2xl text-sm leading-8 text-[#77717e] md:text-base">
-
-                Our journal presents legal developments with context, careful sourcing and accessible explanation.
-
-            </p>
-
-
-
-        </div>
-        <!-- CONTENT -->
-
-        <div class="grid grid-cols-1 gap-10 lg:grid-cols-[0.85fr_1.15fr] lg:items-stretch lg:gap-16">
-            <!-- LEFT FEATURE PANEL -->
-
-            <div class="relative flex min-h-[400px] flex-col justify-between overflow-hidden rounded-[28px] bg-[#24104f] p-8 text-white shadow-[0_20px_60px_rgba(36,16,79,0.14)] sm:p-10 lg:p-12">
-
-
-
-                <div class="pointer-events-none absolute -right-20 -top-20 h-72 w-72 rounded-full border border-white/[0.10]"></div>
-
-                <div class="pointer-events-none absolute -right-8 -top-8 h-48 w-48 rounded-full border border-white/[0.10]"></div>
-
-                <div class="pointer-events-none absolute -bottom-24 -left-20 h-64 w-64 rounded-full bg-[#C391EE]/[0.10] blur-3xl"></div>
-
-
-
-                <div class="relative z-10">
-
-
-
-                    <span class="text-[10px] font-semibold tracking-[0.24em] text-[#d8b9f5]">
-
-                        OUR EDITORIAL COMMITMENT
-
-                    </span>
-
-
-
-                    <h3 class="mt-9 max-w-md text-3xl font-semibold leading-tight tracking-[-0.035em] sm:text-4xl">
-
-                        Understanding the law starts with understanding its context.
-
-                    </h3>
-
-
-
-                    <p class="mt-6 max-w-md text-sm leading-8 text-white/65">
-
-                        We look beyond headlines to explore the reasoning, implications and wider significance of legal developments.
-
-                    </p>
-
-
-
-                </div>
-
-
-
-                <div class="relative z-10 mt-12 flex items-end justify-between border-t border-white/[0.15] pt-7">
-
-
-
-                    <div>
-
-                        <p class="text-[10px] font-semibold tracking-[0.2em] text-white/45">
-
-                            OUR EDITORIAL PRINCIPLE
-
-                        </p>
-
-                        <p class="mt-2 text-sm font-medium text-white/90">
-
-                            Clarity. Context. Responsibility.
-
-                        </p>
-
-                    </div>
-
-
-
-                    <span class="font-serif text-6xl leading-none text-[#C391EE]/40" aria-hidden="true">
-
-                        §
-
-                    </span>
-
-
-
-                </div>
-
-
-
-            </div>
-            <!-- RIGHT PRINCIPLES -->
-
-            <div class="flex flex-col justify-center">
-
-
-
-                <div class="mb-5">
-
-                    <span class="text-[10px] font-semibold tracking-[0.22em] text-[#9870bd]">
-
-                        WHAT GUIDES OUR WORK
-
-                    </span>
-
-                </div>
-                <!-- ITEM 01 -->
-
-                <div class="group flex gap-5 border-b border-[#211c29]/[0.10] py-7 sm:gap-7">
-
-
-
-                    <span class="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-[#C391EE]/40 bg-white text-xs font-semibold text-[#9870bd] transition-all duration-300 group-hover:border-[#C391EE] group-hover:bg-[#C391EE] group-hover:text-white">
-
-                        01
-
-                    </span>
-
-
-
-                    <div class="min-w-0 flex-1">
-
-                        <h3 class="text-lg font-semibold tracking-tight text-[#211c29] transition-colors duration-300 group-hover:text-[#9870bd] sm:text-xl">
-
-                            Context before conclusion
-
-                        </h3>
-
-                        <p class="mt-2 max-w-lg text-sm leading-7 text-[#77717e]">
-
-                            We connect decisions and developments to the legal questions behind them.
-
-                        </p>
-
-                    </div>
-
-
-
-                    <span class="hidden shrink-0 self-center text-xl text-[#C391EE] transition-transform duration-300 group-hover:translate-x-1 sm:block" aria-hidden="true">↗</span>
-
-
-
-                </div>
-                <!-- ITEM 02 -->
-
-                <div class="group flex gap-5 border-b border-[#211c29]/[0.10] py-7 sm:gap-7">
-
-
-
-                    <span class="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-[#C391EE]/40 bg-white text-xs font-semibold text-[#9870bd] transition-all duration-300 group-hover:border-[#C391EE] group-hover:bg-[#C391EE] group-hover:text-white">
-
-                        02
-
-                    </span>
-
-
-
-                    <div class="min-w-0 flex-1">
-
-                        <h3 class="text-lg font-semibold tracking-tight text-[#211c29] transition-colors duration-300 group-hover:text-[#9870bd] sm:text-xl">
-
-                            Clear explanations
-
-                        </h3>
-
-                        <p class="mt-2 max-w-lg text-sm leading-7 text-[#77717e]">
-
-                            We make complex subjects easier to follow while retaining the details that matter.
-
-                        </p>
-
-                    </div>
-
-
-
-                    <span class="hidden shrink-0 self-center text-xl text-[#C391EE] transition-transform duration-300 group-hover:translate-x-1 sm:block" aria-hidden="true">↗</span>
-
-
-
-                </div>
-                <!-- ITEM 03 -->
-
-                <div class="group flex gap-5 border-b border-[#211c29]/[0.10] py-7 sm:gap-7">
-
-
-
-                    <span class="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-[#C391EE]/40 bg-white text-xs font-semibold text-[#9870bd] transition-all duration-300 group-hover:border-[#C391EE] group-hover:bg-[#C391EE] group-hover:text-white">
-
-                        03
-
-                    </span>
-
-
-
-                    <div class="min-w-0 flex-1">
-
-                        <h3 class="text-lg font-semibold tracking-tight text-[#211c29] transition-colors duration-300 group-hover:text-[#9870bd] sm:text-xl">
-
-                            Editorial perspective
-
-                        </h3>
-
-                        <p class="mt-2 max-w-lg text-sm leading-7 text-[#77717e]">
-
-                            Coverage places judgments, legislation and policy within a broader legal framework.
-
-                        </p>
-
-                    </div>
-
-
-
-                    <span class="hidden shrink-0 self-center text-xl text-[#C391EE] transition-transform duration-300 group-hover:translate-x-1 sm:block" aria-hidden="true">↗</span>
-
-
-
-                </div>
-                <!-- ITEM 04 -->
-
-                <div class="group flex gap-5 border-b border-[#211c29]/[0.10] py-7 sm:gap-7">
-
-
-
-                    <span class="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-[#C391EE]/40 bg-white text-xs font-semibold text-[#9870bd] transition-all duration-300 group-hover:border-[#C391EE] group-hover:bg-[#C391EE] group-hover:text-white">
-
-                        04
-
-                    </span>
-
-
-
-                    <div class="min-w-0 flex-1">
-
-                        <h3 class="text-lg font-semibold tracking-tight text-[#211c29] transition-colors duration-300 group-hover:text-[#9870bd] sm:text-xl">
-
-                            Care with the record
-
-                        </h3>
-
-                        <p class="mt-2 max-w-lg text-sm leading-7 text-[#77717e]">
-
-                            Accuracy and responsibility guide how legal information is presented.
-
-                        </p>
-
-                    </div>
-
-
-
-                    <span class="hidden shrink-0 self-center text-xl text-[#C391EE] transition-transform duration-300 group-hover:translate-x-1 sm:block" aria-hidden="true">↗</span>
-
-
-
-                </div>
-
-
-
-            </div>
-
-
-
-        </div>
-
-
-
-    </div>
-
-
-
-</section>
-<!-- =========================================================*
-
-*&#xA0;    MEET OUR TEAM*
-
-*========================================================= -->*
-
-
+<!-- =========================================================
+   MEET OUR TEAM
+   ========================================================= -->
 
 <section id="meet-our-team" class="ks-team-section relative overflow-hidden bg-white py-20 md:py-28 lg:py-32">
 
@@ -1467,20 +972,11 @@ require_once __DIR__ . '/includes/header.php';
         <!-- SECTION HEADING -->
 
         <div class="mx-auto mb-14 max-w-3xl text-center md:mb-16">
-
-
-
             <span class="ks-kicker inline-flex items-center justify-center gap-3">
-
                 <span class="h-px w-8 bg-[#C391EE]"></span>
-
-                04 / THE PEOPLE BEHIND OUR WORK
-
+                03 / THE PEOPLE BEHIND OUR WORK
                 <span class="h-px w-8 bg-[#C391EE]"></span>
-
             </span>
-
-
 
             <h2 class="mt-6 text-4xl font-semibold leading-[1.1] tracking-[-0.045em] text-[#211c29] sm:text-5xl lg:text-6xl">
 
@@ -1527,7 +1023,7 @@ require_once __DIR__ . '/includes/header.php';
 
                             <img
 
-                                src="<?= e(url('assets/images/team/team-1.png')) ?>"
+                                src="<?= e(url('assets/images/team/team-1.jpeg')) ?>"
 
                                 alt="Team member portrait"
 
@@ -1554,28 +1050,15 @@ require_once __DIR__ . '/includes/header.php';
 
 
                             <p class="ks-team-card__role">
-
-                                LEADERSHIP
-
+                                FOUNDER
                             </p>
 
-
-
                             <h3 class="ks-team-card__name">
-
-                                Jhonny Glecky
-
+                                Adv Kumud Jha
                             </h3>
 
-
-
                             <div class="ks-team-card__bottom">
-
-
-
                                 <span>Discover profile</span>
-
-
 
                                 <button
 
@@ -1631,28 +1114,16 @@ require_once __DIR__ . '/includes/header.php';
 
 
                             <p class="ks-team-card__role">
-
-                                LEADERSHIP
-
+                                Founder
                             </p>
 
 
 
                             <h3 class="ks-team-card__back-name">
 
-                                Jhonny Glecky
+                                Adv Kumud Jha
 
                             </h3>
-
-
-
-                            <p class="ks-team-card__designation">
-
-                                Founder / Managing Partner
-
-                            </p>
-
-
 
                             <div class="ks-team-card__separator"></div>
 
@@ -1721,7 +1192,7 @@ require_once __DIR__ . '/includes/header.php';
 
                             <img
 
-                                src="<?= e(url('assets/images/team/team-2.png')) ?>"
+                                src="<?= e(url('assets/images/team/team-2.jpeg')) ?>"
 
                                 alt="Team member portrait"
 
@@ -1749,16 +1220,12 @@ require_once __DIR__ . '/includes/header.php';
 
                             <p class="ks-team-card__role">
 
-                                LEGAL
+                                FOUNDER
 
                             </p>
 
-
-
                             <h3 class="ks-team-card__name">
-
-                                Ariana Young
-
+                                Adv. Subham Kumar
                             </h3>
 
 
@@ -1829,26 +1296,15 @@ require_once __DIR__ . '/includes/header.php';
 
                             <p class="ks-team-card__role">
 
-                                LEGAL
+                            Founder
 
                             </p>
 
 
 
                             <h3 class="ks-team-card__back-name">
-
-                                Ariana Young
-
+                                Adv. Subham Kumar
                             </h3>
-
-
-
-                            <p class="ks-team-card__designation">
-
-                                Senior Advocate / Legal Counsel
-
-                            </p>
-
 
 
                             <div class="ks-team-card__separator"></div>
@@ -1856,13 +1312,9 @@ require_once __DIR__ . '/includes/header.php';
 
 
                             <p class="ks-team-card__bio">
-
                                 Add this person's professional background,
-
                                 legal expertise, practice areas and
-
                                 professional achievements.
-
                             </p>
 
 
@@ -1918,7 +1370,7 @@ require_once __DIR__ . '/includes/header.php';
 
                             <img
 
-                                src="<?= e(url('assets/images/team/team-3.jpg')) ?>"
+                                src="<?= e(url('assets/images/team/team-3.png')) ?>"
 
                                 alt="Team member portrait"
 
@@ -1946,7 +1398,7 @@ require_once __DIR__ . '/includes/header.php';
 
                             <p class="ks-team-card__role">
 
-                                RESEARCH &amp; ANALYSIS
+                                PARTNER
 
                             </p>
 
@@ -1954,7 +1406,7 @@ require_once __DIR__ . '/includes/header.php';
 
                             <h3 class="ks-team-card__name">
 
-                                Jason Hue
+                                Adv. Amar Pandey
 
                             </h3>
 
@@ -2026,7 +1478,7 @@ require_once __DIR__ . '/includes/header.php';
 
                             <p class="ks-team-card__role">
 
-                                RESEARCH &amp; ANALYSIS
+                                PARTNER
 
                             </p>
 
@@ -2034,18 +1486,9 @@ require_once __DIR__ . '/includes/header.php';
 
                             <h3 class="ks-team-card__back-name">
 
-                                Jason Hue
+                                Adv. Amar Pandey
 
                             </h3>
-
-
-
-                            <p class="ks-team-card__designation">
-
-                                Legal Researcher / Analyst
-
-                            </p>
-
 
 
                             <div class="ks-team-card__separator"></div>
@@ -2143,7 +1586,7 @@ require_once __DIR__ . '/includes/header.php';
 
                             <p class="ks-team-card__role">
 
-                                EDITORIAL
+                                PARTNER
 
                             </p>
 
@@ -2151,7 +1594,7 @@ require_once __DIR__ . '/includes/header.php';
 
                             <h3 class="ks-team-card__name">
 
-                                Gretta Buckingman
+                                Adv. Vishal Singh
 
                             </h3>
 
@@ -2223,7 +1666,7 @@ require_once __DIR__ . '/includes/header.php';
 
                             <p class="ks-team-card__role">
 
-                                EDITORIAL
+                                PARTNER
 
                             </p>
 
@@ -2231,17 +1674,13 @@ require_once __DIR__ . '/includes/header.php';
 
                             <h3 class="ks-team-card__back-name">
 
-                                Gretta Buckingman
+                                Adv. Vishal Singh
 
                             </h3>
 
 
 
-                            <p class="ks-team-card__designation">
 
-                                Editorial / Communications
-
-                            </p>
 
 
 
@@ -2296,225 +1735,104 @@ require_once __DIR__ . '/includes/header.php';
 
 
         </div>
-        <!-- BOTTOM NOTE -->
-
-        <div class="mt-14 flex flex-col items-center justify-between gap-5 border-t border-[#211c29]/10 pt-8 text-center sm:flex-row sm:text-left">
-
-
-
-            <p class="text-xs leading-6 text-[#77717e]">
-
-                A shared commitment to thoughtful legal work and responsible communication.
-
-            </p>
-
-
-
-            <span class="text-[10px] font-semibold tracking-[0.2em] text-[#9870bd]">
-
-                K &amp; S DOMUS LEGALIS
-
-            </span>
-
-
-
-        </div>
-
-
 
     </div>
 
 
 
 </section>
-<!-- =========================================================*
-
-*&#xA0;    TEAM FLIP CARD STYLES*
-
-*========================================================= -->*
-
-
+<!-- =========================================================
+ TEAM FLIP CARD STYLES
+========================================================= -->
 
 <style>
     .ks-team-card {
-
         position: relative;
-
         min-width: 0;
-
         height: 450px;
-
         perspective: 1400px;
-
         outline: none;
-
     }
-
-
 
     .ks-team-card__inner {
-
         position: relative;
-
         width: 100%;
-
         height: 100%;
-
         transform-style: preserve-3d;
-
         transition: transform 850ms cubic-bezier(.2, .75, .2, 1);
-
     }
-
-
 
     .ks-team-card.is-flipped .ks-team-card__inner {
-
         transform: rotateY(180deg);
-
     }
-
-
 
     .ks-team-card__face {
-
         position: absolute;
-
         inset: 0;
-
         display: flex;
-
         flex-direction: column;
-
         overflow: hidden;
-
         border: 1px solid rgba(36, 16, 79, .10);
-
         background: #fff;
-
         backface-visibility: hidden;
-
         -webkit-backface-visibility: hidden;
-
         box-shadow: 0 15px 45px rgba(36, 16, 79, .07);
-
     }
-
-
 
     .ks-team-card__front {
-
         transform: rotateY(0deg);
-
     }
-
-
 
     .ks-team-card__back {
-
         transform: rotateY(180deg);
-
         padding: 25px;
-
         background:
-
             radial-gradient(circle at 100% 0%, rgba(195, 145, 238, .17), transparent 38%),
-
             #24104f;
-
         color: #fff;
-
     }
-
-
 
     .ks-team-card__image-wrap {
-
         position: relative;
-
         height: 310px;
-
         flex-shrink: 0;
-
         overflow: hidden;
-
         background: #eee8f5;
-
     }
-
-
 
     .ks-team-card__image {
-
         width: 100%;
-
         height: 100%;
-
         object-fit: cover;
-
         object-position: center top;
-
         transition: transform 900ms cubic-bezier(.2, .75, .2, 1);
-
     }
-
-
-
     .ks-team-card:hover .ks-team-card__image {
-
         transform: scale(1.055);
-
     }
-
-
 
     .ks-team-card__image-overlay {
-
         position: absolute;
-
         inset: 45% 0 0;
-
         pointer-events: none;
-
         background: linear-gradient(to bottom, transparent, rgba(20, 10, 35, .35));
-
     }
-
-
-
     .ks-team-card__number {
-
         position: absolute;
-
         top: 17px;
-
         left: 17px;
-
         z-index: 2;
-
         display: grid;
-
         width: 35px;
-
         height: 35px;
-
         place-items: center;
-
         border: 1px solid rgba(255, 255, 255, .5);
-
         border-radius: 50%;
-
         background: rgba(36, 16, 79, .55);
-
         color: #fff;
-
         font-size: 10px;
-
         backdrop-filter: blur(10px);
-
     }
-
-
 
     .ks-team-card__front-content {
 
@@ -2843,12 +2161,171 @@ require_once __DIR__ . '/includes/header.php';
         }
 
     }
+    /* =========================================================
+   TEAM PORTRAITS — CIRCULAR PREMIUM DESIGN
+   Safe override: preserves card flip functionality
+========================================================= */
+
+.ks-team-card__image-wrap {
+    position: relative !important;
+
+    height: 270px !important;
+    flex-shrink: 0 !important;
+
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+
+    overflow: hidden !important;
+
+    background:
+        radial-gradient(
+            circle,
+            rgba(195, 145, 238, 0.12) 0%,
+            rgba(195, 145, 238, 0.04) 55%,
+            transparent 75%
+        ) !important;
+}
+
+/* Circular outer frame */
+.ks-team-card__image-wrap::before {
+    content: "" !important;
+
+    position: absolute !important;
+
+    width: 224px !important;
+    height: 224px !important;
+
+    border-radius: 50% !important;
+
+    background: linear-gradient(
+        145deg,
+        #ffffff,
+        #f5effb
+    ) !important;
+
+    border: 1px solid rgba(195, 145, 238, 0.45) !important;
+
+    box-shadow:
+        0 0 0 7px rgba(195, 145, 238, 0.09),
+        0 15px 35px rgba(36, 16, 79, 0.09) !important;
+
+    z-index: 0 !important;
+}
+
+/* Actual portrait */
+.ks-team-card__image {
+    position: relative !important;
+    z-index: 1 !important;
+
+    display: block !important;
+
+    width: 214px !important;
+    height: 214px !important;
+
+    flex-shrink: 0 !important;
+
+    border-radius: 50% !important;
+
+    object-fit: contain !important;
+    object-position: center center !important;
+
+    background: transparent !important;
+
+    padding: 5px !important;
+
+    transform: none !important;
+
+    transition:
+        transform 500ms ease,
+        filter 500ms ease !important;
+}
+
+/* Prevent previous zoom effect */
+.ks-team-card:hover .ks-team-card__image {
+    transform: scale(1.025) !important;
+}
+
+/* Keep portrait image itself circular */
+.ks-team-card__image {
+    clip-path: circle(50%) !important;
+}
+
+/* Remove old image gradient */
+.ks-team-card__image-overlay {
+    display: none !important;
+}
+
+/* Keep number badge above portrait */
+.ks-team-card__number {
+    position: absolute !important;
+
+    top: 18px !important;
+    left: 18px !important;
+
+    z-index: 5 !important;
+
+    width: 35px !important;
+    height: 35px !important;
+
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+
+    border-radius: 50% !important;
+
+    background: #24104f !important;
+    color: #ffffff !important;
+
+    border: 2px solid #ffffff !important;
+
+    box-shadow:
+        0 5px 15px rgba(36, 16, 79, 0.18) !important;
+}
+
+/* Front card */
+.ks-team-card__front {
+    background: #ffffff !important;
+}
+
+/* Refined card border */
+.ks-team-card__face {
+    border-color: rgba(195, 145, 238, 0.20) !important;
+}
+
+/* Portrait area on mobile */
+@media (max-width: 640px) {
+
+    .ks-team-card__image-wrap {
+        height: 290px !important;
+    }
+
+    .ks-team-card__image-wrap::before {
+        width: 210px !important;
+        height: 210px !important;
+    }
+
+    .ks-team-card__image {
+        width: 200px !important;
+        height: 200px !important;
+    }
+}
+
+/* Respect reduced motion */
+@media (prefers-reduced-motion: reduce) {
+
+    .ks-team-card__image {
+        transition: none !important;
+    }
+
+    .ks-team-card:hover .ks-team-card__image {
+        transform: none !important;
+    }
+}
 </style>
 <!-- =========================================================*
-
-*&#xA0;    TEAM CARD INTERACTION*
-
-*========================================================= -->*
+  TEAM CARD INTERACTION
+*========================================================= -->
 
 
 
@@ -2891,313 +2368,506 @@ require_once __DIR__ . '/includes/header.php';
 
     })();
 </script>
-<!-- NEWSLETTER -->
-
-<section class="ks-newsletter relative isolate overflow-hidden bg-[#f8f6fb] py-20 md:py-28 lg:py-32" id="newsletter">
 
 
+<!-- NEWSLETTER + CONSULTATION -->
+<section
+    class="ks-newsletter relative isolate overflow-hidden bg-[#f8f6fb] py-16 md:py-20 lg:py-24"
+    id="newsletter"
+>
 
     <div class="site-container">
-        <!-- CENTERED SECTION HEADING -->
 
-        <div class="mx-auto mb-14 max-w-3xl text-center md:mb-16">
-
-
+        <!-- SECTION HEADING -->
+        <div class="mx-auto mb-12 max-w-3xl text-center md:mb-14">
 
             <span class="ks-kicker inline-flex items-center justify-center gap-3 text-[10px] font-semibold tracking-[0.22em] text-[#9870bd]">
 
                 <span class="h-px w-8 bg-[#C391EE]"></span>
 
-                04 / THE K&amp;S BRIEFING
+                04 / CONNECT WITH K&amp;S
 
                 <span class="h-px w-8 bg-[#C391EE]"></span>
 
             </span>
 
-
-
             <h2
-
-
-
-                class="mt-6 text-4xl font-semibold leading-[1.1] tracking-[-0.045em] text-[#211c29] sm:text-5xl lg:text-6xl">
-
+                class="mt-6 text-4xl font-semibold leading-[1.1] tracking-[-0.045em] text-[#211c29] sm:text-5xl lg:text-6xl"
+            >
                 Stay informed.
-
-                <span class="block text-[#9870bd]">Stay ahead.</span>
-
+                <span class="block text-[#9870bd]">Stay connected.</span>
             </h2>
 
-
-
-            <p class="mx-auto mt-7 max-w-2xl text-sm leading-7 text-[#77717e] md:text-base">
-
-                Register your interest in selected legal insights and updates. Submissions are recorded for editorial review; email delivery is not currently enabled.
-
+            <p class="mx-auto mt-6 max-w-2xl text-sm leading-7 text-[#77717e] md:text-base">
+                Follow our legal insights or take the next step towards
+                a professional consultation.
             </p>
 
-
-
         </div>
-        <!-- NEWSLETTER PANEL -->
-
-        <div class="relative mx-auto max-w-5xl overflow-hidden rounded-[30px] border border-[#C391EE]/20 bg-[#24104f] shadow-[0_25px_80px_rgba(36,16,79,0.16)]">
-            <!-- DECORATIVE BACKGROUND -->
-
-            <div class="pointer-events-none absolute -right-24 -top-32 h-96 w-96 rounded-full border border-white/[0.07]"></div>
-
-            <div class="pointer-events-none absolute -right-10 -top-16 h-64 w-64 rounded-full border border-white/[0.07]"></div>
-
-            <div class="pointer-events-none absolute -bottom-40 -left-24 h-96 w-96 rounded-full bg-[#C391EE]/[0.12] blur-3xl"></div>
-            <!-- TOP ACCENT -->
-
-            <div class="absolute left-0 right-0 top-0 h-1 bg-gradient-to-r from-transparent via-[#C391EE] to-transparent"></div>
 
 
-
-            <div class="relative z-10 grid grid-cols-1 lg:grid-cols-[0.85fr_1.15fr]">
-                <!-- LEFT EDITORIAL PANEL -->
-
-                <div class="flex flex-col justify-between border-b border-white/[0.10] p-8 sm:p-10 lg:border-b-0 lg:border-r lg:p-12">
+        <!-- TWO-PANEL LAYOUT -->
+        <div class="grid grid-cols-1 gap-6 lg:grid-cols-2">
 
 
+            <!-- =====================================================
+                 LEFT PANEL — NEWSLETTER
+            ====================================================== -->
 
-                    <div>
+            <div
+                class="ks-newsletter-panel relative flex h-full flex-col overflow-hidden rounded-[28px] border border-[#C391EE]/20 bg-[#24104f] shadow-[0_25px_70px_rgba(36,16,79,0.12)]"
+            >
+
+                <!-- Decorative background -->
+                <div
+                    class="pointer-events-none absolute -right-24 -top-32 h-80 w-80 rounded-full border border-white/[0.07]"
+                ></div>
+
+                <div
+                    class="pointer-events-none absolute -right-10 -top-16 h-56 w-56 rounded-full border border-white/[0.07]"
+                ></div>
+
+                <div
+                    class="pointer-events-none absolute -bottom-40 -left-24 h-80 w-80 rounded-full bg-[#C391EE]/[0.12] blur-3xl"
+                ></div>
+
+                <!-- Accent -->
+                <div
+                    class="absolute left-0 right-0 top-0 h-1 bg-gradient-to-r from-transparent via-[#C391EE] to-transparent"
+                ></div>
 
 
+                <div class="relative z-10 flex flex-1 flex-col p-7 sm:p-9 lg:p-10">
 
-                        <span class="inline-flex items-center gap-2 text-[10px] font-semibold tracking-[0.22em] text-[#d8b9f5]">
+                    <!-- Label -->
+                    <span class="inline-flex items-center gap-2 text-[10px] font-semibold tracking-[0.22em] text-[#d8b9f5]">
 
-                            <span class="h-1.5 w-1.5 rounded-full bg-[#C391EE]"></span>
+                        <span class="h-1.5 w-1.5 rounded-full bg-[#C391EE]"></span>
 
-                            THE K&amp;S EDITORIAL
+                        THE K&amp;S EDITORIAL
 
+                    </span>
+
+
+                    <!-- Heading -->
+                    <h3
+                        style="font-family: 'Poppins', sans-serif !important;"
+                        class="mt-7 text-3xl font-semibold leading-[1.2] tracking-[-0.035em] text-white sm:text-4xl"
+                    >
+                        Insight that
+                        <span class="block text-[#cda5f1]">
+                            keeps you ahead.
                         </span>
+                    </h3>
 
 
-
-                        <h3
-
-                            style="font-family: 'Poppins', sans-serif !important;"
-
-                            class="mt-8 text-3xl font-semibold leading-[1.2] tracking-[-0.035em] text-white sm:text-4xl">
-
-                            Insight that
-
-                            <span class="block text-[#cda5f1]">keeps you ahead.</span>
-
-                        </h3>
+                    <!-- Description -->
+                    <p class="mt-5 max-w-md text-sm leading-8 text-white/65">
+                        Stay connected with selected legal developments,
+                        thoughtful perspectives and updates from our journal.
+                    </p>
 
 
+                    <!-- Newsletter form -->
+                    <div class="mt-8">
 
-                        <p class="mt-6 max-w-sm text-sm leading-8 text-white/60">
+                        <div class="mb-5 flex items-center gap-3">
 
-                            Stay connected with selected legal developments, thoughtful perspectives and updates from our journal.
+                            <!-- Email icon -->
+                            <span
+                                class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-[#C391EE]/30 bg-[#C391EE]/[0.12] text-[#d8b9f5]"
+                            >
 
-                        </p>
+                                <svg
+                                    xmlns="http://www.w3.org/2000/svg"
+                                    width="20"
+                                    height="20"
+                                    viewBox="0 0 24 24"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    stroke-width="1.6"
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                    aria-hidden="true"
+                                >
+                                    <rect x="3" y="5" width="18" height="14" rx="2"></rect>
+                                    <path d="m3 7 9 6 9-6"></path>
+                                </svg>
 
-
-
-                    </div>
-
-
-
-                    <div class="mt-10 border-t border-white/[0.12] pt-6">
-
-
-
-                        <span
-
-                            style="font-family: 'Poppins', sans-serif !important;"
-
-                            class="text-5xl font-semibold tracking-tight text-white/[0.12]">
-
-                            K&amp;S
-
-                        </span>
-
-
-
-                        <p class="mt-2 text-[10px] font-medium tracking-[0.18em] text-white/40">
-
-                            DOMUS LEGALIS
-
-                        </p>
+                            </span>
 
 
+                            <div>
 
-                    </div>
+                                <h4
+                                    style="font-family: 'Poppins', sans-serif !important;"
+                                    class="text-xl font-semibold tracking-tight text-white"
+                                >
+                                    Join the briefing.
+                                </h4>
+
+                                <p class="mt-1 text-xs leading-6 text-white/50">
+                                    Selected editorial updates.
+                                </p>
+
+                            </div>
+
+                        </div>
 
 
+                        <!-- SUBSCRIPTION FORM -->
+                        <form
+                            method="post"
+                            action="<?= e(url('newsletter/subscribe.php')) ?>"
+                            class="flex flex-col gap-3"
+                        >
 
-                </div>
-                <!-- RIGHT SUBSCRIPTION FORM -->
-
-                <div class="flex flex-col justify-center p-8 sm:p-10 lg:p-12">
-
-
-
-                    <div class="mb-8">
-                        <!-- EMAIL ICON -->
-
-                        <span class="flex h-12 w-12 items-center justify-center rounded-2xl border border-[#C391EE]/30 bg-[#C391EE]/[0.12] text-[#d8b9f5]">
+                            <?= csrf_field() ?>
 
 
+                            <label
+                                class="sr-only"
+                                for="newsletter-email"
+                            >
+                                Email address
+                            </label>
 
-                            <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
 
-                                <rect x="3" y="5" width="18" height="14" rx="2"></rect>
+                            <input
+                                id="newsletter-email"
+                                type="email"
+                                name="email"
+                                maxlength="254"
+                                autocomplete="email"
+                                placeholder="Enter your email address"
+                                required
+                                class="h-14 w-full rounded-xl border border-white/[0.14] bg-white px-5 text-sm text-[#211c29] outline-none transition-all duration-300 placeholder:text-[#a49da9] focus:border-[#C391EE] focus:ring-4 focus:ring-[#C391EE]/[0.15]"
+                            >
 
-                                <path d="m3 7 9 6 9-6"></path>
 
+                            <button
+                                type="submit"
+                                class="group inline-flex h-14 w-full items-center justify-center gap-3 rounded-xl bg-[#C391EE] px-7 text-xs font-semibold tracking-wide text-[#24104f] shadow-[0_8px_25px_rgba(195,145,238,0.18)] transition-all duration-300 hover:-translate-y-0.5 hover:bg-white hover:shadow-[0_12px_30px_rgba(0,0,0,0.15)]"
+                            >
+
+                                Subscribe to the briefing
+
+                                <span
+                                    class="text-base transition-transform duration-300 group-hover:translate-x-1"
+                                    aria-hidden="true"
+                                >
+                                    ↗
+                                </span>
+
+                            </button>
+
+                        </form>
+
+
+                        <!-- Disclosure -->
+                        <div class="mt-5 flex items-start gap-2.5 border-t border-white/[0.10] pt-4">
+
+                            <svg
+                                class="mt-1 shrink-0 text-[#C391EE]"
+                                xmlns="http://www.w3.org/2000/svg"
+                                width="15"
+                                height="15"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                stroke-width="1.7"
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                                aria-hidden="true"
+                            >
+                                <circle cx="12" cy="12" r="10"></circle>
+                                <path d="M12 16v-4"></path>
+                                <path d="M12 8h.01"></path>
                             </svg>
 
 
+                            <small class="text-[11px] leading-6 text-white/45">
+                                We record your request as pending.
+                                Email delivery and automated confirmation
+                                are not currently enabled.
+                            </small>
 
-                        </span>
-
-
-
-                        <h3
-
-                            style="font-family: 'Poppins', sans-serif !important;"
-
-                            class="mt-6 text-2xl font-semibold tracking-tight text-white sm:text-3xl">
-
-                            Join the briefing.
-
-                        </h3>
-
-
-
-                        <p class="mt-3 text-sm leading-7 text-white/55">
-
-                            Register your email address for selected editorial updates.
-
-                        </p>
-
-
+                        </div>
 
                     </div>
-                    <!-- SUBSCRIPTION FORM -->
-
-                    <form
-
-                        method="post"
-
-                        action="<?= e(url('newsletter/subscribe.php')) ?>"
-
-                        class="flex flex-col gap-3">
 
 
+                    <!-- Branding -->
+                    <div class="mt-auto border-t border-white/[0.12] pt-7">
 
-                        <?= csrf_field() ?>
+                        <span
+                            style="font-family: 'Poppins', sans-serif !important;"
+                            class="text-4xl font-semibold tracking-tight text-white/[0.13]"
+                        >
+                            K&amp;S
+                        </span>
 
+                        <p class="mt-1 text-[9px] font-medium tracking-[0.2em] text-white/40">
+                            DOMUS LEGALIS
+                        </p>
 
+                    </div>
 
-                        <label class="sr-only" for="newsletter-email">Email address</label>
-
-
-
-                        <input
-
-                            id="newsletter-email"
-
-                            type="email"
-
-                            name="email"
-
-                            maxlength="254"
-
-                            autocomplete="email"
-
-                            placeholder="Enter your email address"
-
-                            required
-
-                            class="h-14 w-full rounded-xl border border-white/[0.14] bg-white px-5 text-sm text-[#211c29] outline-none transition-all duration-300 placeholder:text-[#a49da9] focus:border-[#C391EE] focus:ring-4 focus:ring-[#C391EE]/[0.15]">
+                </div>
 
 
+                <!-- Decorative legal symbol -->
+                <span
+                    class="pointer-events-none absolute bottom-3 right-5 text-8xl font-semibold leading-none text-white/[0.035]"
+                    style="font-family: 'Poppins', sans-serif !important;"
+                    aria-hidden="true"
+                >
+                    §
+                </span>
+
+            </div>
+
+
+            <!-- =====================================================
+                 RIGHT PANEL — BOOK A CONSULTATION
+            ====================================================== -->
+
+            <div
+                class="ks-consultation-panel relative flex h-full flex-col overflow-hidden rounded-[28px] border border-[#C391EE]/20 bg-white shadow-[0_25px_70px_rgba(36,16,79,0.08)]"
+            >
+
+                <!-- Decorative background -->
+                <div
+                    class="pointer-events-none absolute -right-24 -top-24 h-80 w-80 rounded-full bg-[#C391EE]/[0.08] blur-3xl"
+                ></div>
+
+                <div
+                    class="pointer-events-none absolute -right-10 top-10 h-52 w-52 rounded-full border border-[#24104f]/[0.05]"
+                ></div>
+
+                <div
+                    class="pointer-events-none absolute -right-2 top-20 h-36 w-36 rounded-full border border-[#24104f]/[0.05]"
+                ></div>
+
+
+                <!-- Accent -->
+                <div
+                    class="absolute left-0 right-0 top-0 h-1 bg-gradient-to-r from-transparent via-[#24104f] to-transparent"
+                ></div>
+
+
+                <div class="relative z-10 flex flex-1 flex-col p-7 sm:p-9 lg:p-10">
+
+
+                    <!-- Label -->
+                    <span class="inline-flex items-center gap-2 text-[10px] font-semibold tracking-[0.22em] text-[#9870bd]">
+
+                        <span class="h-1.5 w-1.5 rounded-full bg-[#24104f]"></span>
+
+                        PERSONAL LEGAL GUIDANCE
+
+                    </span>
+
+
+                    <!-- Icon -->
+                    <div
+                        class="mt-7 flex h-14 w-14 items-center justify-center rounded-2xl border border-[#C391EE]/25 bg-[#f7f2fc] text-[#24104f]"
+                    >
+
+                        <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            width="25"
+                            height="25"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            stroke-width="1.6"
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            aria-hidden="true"
+                        >
+                            <path d="M12 3v18"></path>
+                            <path d="M5 7h14"></path>
+                            <path d="m5 7-3 6h6L5 7Z"></path>
+                            <path d="m19 7-3 6h6l-3-6Z"></path>
+                            <path d="M8 21h8"></path>
+                        </svg>
+
+                    </div>
+
+
+                    <!-- Heading -->
+                    <h3
+                        style="font-family: 'Poppins', sans-serif !important;"
+                        class="mt-7 text-3xl font-semibold leading-[1.2] tracking-[-0.035em] text-[#24104f] sm:text-4xl"
+                    >
+                        Need clarity
+                        <span class="block text-[#9870bd]">
+                            on your next step?
+                        </span>
+                    </h3>
+
+
+                    <!-- Description -->
+                    <p class="mt-5 max-w-md text-sm leading-8 text-[#77717e]">
+                        Speak with our team about your legal concerns,
+                        understand your options and take the next step
+                        with greater confidence.
+                    </p>
+
+
+                    <!-- Benefits -->
+                    <div class="mt-7 space-y-4">
+
+                        <div class="flex items-start gap-3">
+
+                            <span class="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[#f2eafb] text-[#9870bd]">
+
+                                <svg
+                                    width="14"
+                                    height="14"
+                                    viewBox="0 0 24 24"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    stroke-width="2"
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                    aria-hidden="true"
+                                >
+                                    <path d="m5 12 4 4L19 6"></path>
+                                </svg>
+
+                            </span>
+
+                            <p class="text-sm leading-7 text-[#625b6d]">
+                                Discuss your matter with our team.
+                            </p>
+
+                        </div>
+
+
+                        <div class="flex items-start gap-3">
+
+                            <span class="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[#f2eafb] text-[#9870bd]">
+
+                                <svg
+                                    width="14"
+                                    height="14"
+                                    viewBox="0 0 24 24"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    stroke-width="2"
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                    aria-hidden="true"
+                                >
+                                    <path d="m5 12 4 4L19 6"></path>
+                                </svg>
+
+                            </span>
+
+                            <p class="text-sm leading-7 text-[#625b6d]">
+                                Explore the appropriate legal approach.
+                            </p>
+
+                        </div>
+
+
+                        <div class="flex items-start gap-3">
+
+                            <span class="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[#f2eafb] text-[#9870bd]">
+
+                                <svg
+                                    width="14"
+                                    height="14"
+                                    viewBox="0 0 24 24"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    stroke-width="2"
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                    aria-hidden="true"
+                                >
+                                    <path d="m5 12 4 4L19 6"></path>
+                                </svg>
+
+                            </span>
+
+                            <p class="text-sm leading-7 text-[#625b6d]">
+                                Understand the consultation process.
+                            </p>
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- CONSULTATION BUTTON -->
+                    <div class="mt-8">
 
                         <button
+                            type="button"
+                            data-consultation-open
+                            class="group inline-flex min-h-[58px] w-full items-center justify-center gap-3 rounded-xl bg-[#24104f] px-7 py-4 text-sm font-semibold tracking-wide text-white shadow-[0_12px_30px_rgba(36,16,79,0.15)] transition-all duration-300 hover:-translate-y-0.5 hover:bg-[#39206b] hover:shadow-[0_18px_35px_rgba(36,16,79,0.22)] focus:outline-none focus:ring-4 focus:ring-[#C391EE]/30"
+                        >
 
-                            type="submit"
+                            Book a Consultation
 
-                            class="group inline-flex h-14 w-full items-center justify-center gap-3 rounded-xl bg-[#C391EE] px-7 text-xs font-semibold tracking-wide text-[#24104f] shadow-[0_8px_25px_rgba(195,145,238,0.18)] transition-all duration-300 hover:-translate-y-0.5 hover:bg-white hover:shadow-[0_12px_30px_rgba(0,0,0,0.15)]">
-
-
-
-                            Subscribe to the briefing
-
-
-
-                            <span class="text-base transition-transform duration-300 group-hover:translate-x-1" aria-hidden="true">↗</span>
-
-
+                            <span
+                                class="text-lg transition-transform duration-300 group-hover:translate-x-1 group-hover:-translate-y-0.5"
+                                aria-hidden="true"
+                            >
+                                ↗
+                            </span>
 
                         </button>
 
 
-
-                    </form>
-                    <!-- DISCLOSURE -->
-
-                    <div class="mt-6 flex items-start gap-2.5 border-t border-white/[0.10] pt-5">
-
-
-
-                        <svg class="mt-0.5 shrink-0 text-[#C391EE]" xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-
-                            <circle cx="12" cy="12" r="10"></circle>
-
-                            <path d="M12 16v-4"></path>
-
-                            <path d="M12 8h.01"></path>
-
-                        </svg>
-
-
-
-                        <small class="text-[11px] leading-6 text-white/45">
-
-                            We record your request as pending. Email delivery and automated confirmation are not currently enabled.
-
-                        </small>
-
-
+                        <p class="mt-4 text-center text-[11px] leading-6 text-[#958b9e]">
+                            Begin with a conversation. Take your next step with clarity.
+                        </p>
 
                     </div>
 
 
+                    <!-- Bottom branding -->
+                    <div class="mt-auto border-t border-[#24104f]/10 pt-7">
+
+                        <div class="flex items-center justify-between gap-4">
+
+                            <div>
+
+                                <p class="text-[9px] font-semibold tracking-[0.2em] text-[#9870bd]">
+                                    K&amp;S DOMUS LEGALIS
+                                </p>
+
+                                <p class="mt-2 text-xs text-[#77717e]">
+                                    Where law meets strategy.
+                                </p>
+
+                            </div>
+
+
+                            <span
+                                class="text-5xl font-semibold text-[#24104f]/[0.06]"
+                                style="font-family: 'Poppins', sans-serif !important;"
+                                aria-hidden="true"
+                            >
+                                §
+                            </span>
+
+                        </div>
+
+                    </div>
 
                 </div>
 
-
-
             </div>
-            <!-- DECORATIVE LEGAL SYMBOL -->
-
-            <span
-
-                class="pointer-events-none absolute bottom-3 right-6 text-8xl font-semibold leading-none text-white/[0.035]"
-
-                style="font-family: 'Poppins', sans-serif !important;"
-
-                aria-hidden="true">
-
-                §
-
-            </span>
-
 
 
         </div>
 
-
-
     </div>
-
-
 
 </section>
 

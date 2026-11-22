@@ -26,11 +26,11 @@ function upload_featured_image(array $file): ?string
     $tmpName = $file['tmp_name'] ?? null;
 
     if (
-        !is_int($size)
-        || $size <= 0
-        || $size > MAX_UPLOAD_BYTES
-        || !is_string($tmpName)
-        || !is_uploaded_file($tmpName)
+        !is_int($size) ||
+        $size <= 0 ||
+        $size > MAX_UPLOAD_BYTES ||
+        !is_string($tmpName) ||
+        !is_uploaded_file($tmpName)
     ) {
         throw new RuntimeException('Choose an image smaller than 5 MB.');
     }
@@ -59,12 +59,7 @@ function upload_featured_image(array $file): ?string
         throw new RuntimeException('The uploaded file is not a valid image.');
     }
 
-    if (
-        $imageInfo[0] < 1
-        || $imageInfo[1] < 1
-        || $imageInfo[0] > 10000
-        || $imageInfo[1] > 10000
-    ) {
+    if ($imageInfo[0] < 1 || $imageInfo[1] < 1 || $imageInfo[0] > 10000 || $imageInfo[1] > 10000) {
         throw new RuntimeException('The image dimensions are not supported.');
     }
 
@@ -90,9 +85,9 @@ function upload_featured_image(array $file): ?string
 function delete_uploaded_image(?string $filename): void
 {
     if (
-        !$filename
-        || basename($filename) !== $filename
-        || !preg_match('/^[a-f0-9]{40}\.(jpg|png|webp|gif)$/', $filename)
+        !$filename ||
+        basename($filename) !== $filename ||
+        !preg_match('/^[a-f0-9]{40}\.(jpg|png|webp|gif)$/', $filename)
     ) {
         return;
     }
@@ -109,11 +104,8 @@ function delete_uploaded_image(?string $filename): void
  *
  * $excludeId allows an article to keep its existing slug while editing.
  */
-function unique_article_slug(
-    PDO $pdo,
-    string $title,
-    ?int $excludeId = null
-): string {
+function unique_article_slug(PDO $pdo, string $title, ?int $excludeId = null): string
+{
     $base = make_slug($title);
     $base = substr($base, 0, 230);
     $candidate = $base;
@@ -156,10 +148,7 @@ function validate_article_input(array $input): array
     $title = trim((string) ($input['title'] ?? ''));
     $excerpt = trim((string) ($input['excerpt'] ?? ''));
     $content = trim((string) ($input['content'] ?? ''));
-    $categoryId = filter_var(
-        $input['category_id'] ?? null,
-        FILTER_VALIDATE_INT
-    );
+    $categoryId = filter_var($input['category_id'] ?? null, FILTER_VALIDATE_INT);
     $status = (string) ($input['status'] ?? 'draft');
 
     if ($title === '' || mb_strlen($title) > 255) {
@@ -183,7 +172,7 @@ function validate_article_input(array $input): array
     }
 
     $categoryStatement = $GLOBALS['pdo']->prepare(
-        'SELECT id FROM categories WHERE id = :id LIMIT 1'
+        'SELECT id FROM categories WHERE id = :id LIMIT 1',
     );
 
     $categoryStatement->execute(['id' => $categoryId]);

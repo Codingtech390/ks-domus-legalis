@@ -14,10 +14,7 @@ verify_csrf();
 
 $email = strtolower(trim((string) ($_POST['email'] ?? '')));
 
-if (
-    strlen($email) > 254 ||
-    !filter_var($email, FILTER_VALIDATE_EMAIL)
-) {
+if (strlen($email) > 254 || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
     set_flash('error', 'Please enter a valid email address.');
     redirect('index.php#newsletter');
 }
@@ -30,22 +27,19 @@ try {
          ON DUPLICATE KEY UPDATE
            consent_at = IF(status = 'unsubscribed', NOW(), consent_at),
            status = IF(status = 'unsubscribed', 'pending', status),
-           updated_at = NOW()"
+           updated_at = NOW()",
     );
 
     $statement->execute(['email' => $email]);
 
     set_flash(
         'success',
-        'Your newsletter request has been recorded. Withdrawn requests return to pending review; email delivery is not enabled.'
+        'Your newsletter request has been recorded. Withdrawn requests return to pending review; email delivery is not enabled.',
     );
 } catch (PDOException $exception) {
     error_log('Newsletter signup failed: ' . $exception->getMessage());
 
-    set_flash(
-        'error',
-        'We could not process your request. Please try again.'
-    );
+    set_flash('error', 'We could not process your request. Please try again.');
 }
 
 redirect('index.php#newsletter');

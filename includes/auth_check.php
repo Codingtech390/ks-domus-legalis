@@ -9,9 +9,7 @@ if (empty($_SESSION['admin_id']) || !is_numeric($_SESSION['admin_id'])) {
     redirect('admin/login.php');
 }
 
-$adminStatement = $pdo->prepare(
-    'SELECT id, name, email FROM admins WHERE id = :id LIMIT 1'
-);
+$adminStatement = $pdo->prepare('SELECT id, name, email FROM admins WHERE id = :id LIMIT 1');
 
 $adminStatement->execute([
     'id' => (int) $_SESSION['admin_id'],

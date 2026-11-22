@@ -20,9 +20,7 @@ if (!is_int($id) || $id < 1) {
     redirect('admin/index.php');
 }
 
-$statement = $pdo->prepare(
-    'SELECT id, title, featured_image FROM articles WHERE id = :id LIMIT 1'
-);
+$statement = $pdo->prepare('SELECT id, title, featured_image FROM articles WHERE id = :id LIMIT 1');
 $statement->execute(['id' => $id]);
 
 $article = $statement->fetch();

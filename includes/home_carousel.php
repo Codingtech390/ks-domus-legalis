@@ -8,9 +8,10 @@ declare(strict_types=1);
 
 $slides = [
     [
-        'eyebrow' => 'K & S DOMUS LEGALIS',
-        'title' => 'Law. Perspective. Purpose.',
-        'description' => 'Exploring legal questions with clarity, context and a commitment to thoughtful analysis.',
+        'eyebrow' => 'K&S DOMUS_LEGALIS',
+        'title' => 'Where Law Meets Strategy.',
+        'description' =>
+            'We study every angle, speak plainly about the facts, and recommend the path that best serves your case.',
         'image' => 'assets/images/hero/law-slide-1.png',
         'button' => 'Explore our approach',
         'link' => url('index.php#why-choose-us'),
@@ -32,7 +33,8 @@ $slides = [
     [
         'eyebrow' => 'THE LEGAL JOURNAL',
         'title' => 'Informed by law. Driven by insight.',
-        'description' => 'Discover legal developments, judgments and perspectives published by our editorial team.',
+        'description' =>
+            'Discover legal developments, judgments and perspectives published by our editorial team.',
         'image' => 'assets/images/hero/law-slide-3.png',
         'button' => 'Read latest insights',
         'link' => url('index.php#latest-news'),
@@ -389,7 +391,9 @@ $totalSlides = count($slides);
         border-top: 1px solid rgba(255,255,255,.19);
     }
 
-    #<?= e($carouselId) ?> .ks-hero__footer-meta { display: flex; flex-direction: column; gap: 5px; }
+    #<?= e(
+        $carouselId,
+    ) ?> .ks-hero__footer-meta { display: flex; flex-direction: column; gap: 5px; }
 
     #<?= e($carouselId) ?> .ks-hero__meta-label {
         color: rgba(255,255,255,.45);
@@ -507,7 +511,9 @@ $totalSlides = count($slides);
         #<?= e($carouselId) ?> .ks-hero__copy { width: 100%; }
         #<?= e($carouselId) ?> .ks-hero__title { font-size: clamp(43px, 10vw, 66px); }
         #<?= e($carouselId) ?> .ks-hero__description { max-width: 95%; font-size: 13px; }
-        #<?= e($carouselId) ?> .ks-hero__topline { top: 24px; left: 22px; right: 22px; font-size: 8px; }
+        #<?= e(
+            $carouselId,
+        ) ?> .ks-hero__topline { top: 24px; left: 22px; right: 22px; font-size: 8px; }
         #<?= e($carouselId) ?> .ks-hero__topline-rule,
         #<?= e($carouselId) ?> .ks-hero__topline-rule + span,
         #<?= e($carouselId) ?> .ks-hero__side-note,

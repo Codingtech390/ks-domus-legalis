@@ -28,10 +28,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $password = (string) ($_POST['password'] ?? '');
 
         if (
-            !filter_var($email, FILTER_VALIDATE_EMAIL)
-            || strlen($email) > 190
-            || $password === ''
-            || strlen($password) > 4096
+            !filter_var($email, FILTER_VALIDATE_EMAIL) ||
+            strlen($email) > 190 ||
+            $password === '' ||
+            strlen($password) > 4096
         ) {
             $error = 'Enter a valid email address and password.';
         } else {
@@ -39,26 +39,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 'SELECT id, name, email, password
                  FROM admins
                  WHERE email = :email
-                 LIMIT 1'
+                 LIMIT 1',
             );
 
             $statement->execute(['email' => $email]);
             $record = $statement->fetch();
 
-            if (
-                $record
-                && password_verify($password, $record['password'])
-            ) {
+            if ($record && password_verify($password, $record['password'])) {
                 session_regenerate_id(true);
 
                 $_SESSION['admin_id'] = (int) $record['id'];
                 $_SESSION['admin_name'] = $record['name'];
                 $_SESSION['_csrf_token'] = bin2hex(random_bytes(32));
 
-                unset(
-                    $_SESSION['_login_attempts'],
-                    $_SESSION['_login_locked_until']
-                );
+                unset($_SESSION['_login_attempts'], $_SESSION['_login_locked_until']);
 
                 redirect('admin/index.php');
             }
@@ -145,7 +139,9 @@ require_once __DIR__ . '/../includes/header.php';
                 </button>
             </form>
 
-            <a href="<?= e(url('index.php')) ?>" class="mt-7 inline-block text-sm font-semibold text-slate-500 hover:text-red-600">
+            <a href="<?= e(
+                url('index.php'),
+            ) ?>" class="mt-7 inline-block text-sm font-semibold text-slate-500 hover:text-red-600">
                 ← Return to the public portal
             </a>
         </div>

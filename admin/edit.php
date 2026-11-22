@@ -7,9 +7,7 @@ require_once __DIR__ . '/../includes/article_helpers.php';
 require_once __DIR__ . '/../includes/category_helpers.php';
 
 ensure_default_categories($pdo);
-$categoryStatement = $pdo->query(
-    'SELECT id, name FROM categories ORDER BY name ASC'
-);
+$categoryStatement = $pdo->query('SELECT id, name FROM categories ORDER BY name ASC');
 
 $categories = $categoryStatement->fetchAll();
 
@@ -24,9 +22,7 @@ if (!is_int($id) || $id < 1) {
     exit('Invalid article ID.');
 }
 
-$articleStatement = $pdo->prepare(
-    'SELECT * FROM articles WHERE id = :id LIMIT 1'
-);
+$articleStatement = $pdo->prepare('SELECT * FROM articles WHERE id = :id LIMIT 1');
 $articleStatement->execute(['id' => $id]);
 $article = $articleStatement->fetch();
 
@@ -49,9 +45,7 @@ $values = [
 
 $errors = [];
 
-$categoryStatement = $pdo->query(
-    'SELECT id, name FROM categories ORDER BY name ASC'
-);
+$categoryStatement = $pdo->query('SELECT id, name FROM categories ORDER BY name ASC');
 $categories = $categoryStatement->fetchAll();
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -78,9 +72,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $willPublish = $data['status'] === 'published';
 
         if ($willPublish) {
-            $publishedAt = $wasPublished && $article['published_at'] !== null
-                ? $article['published_at']
-                : date('Y-m-d H:i:s');
+            $publishedAt =
+                $wasPublished && $article['published_at'] !== null
+                    ? $article['published_at']
+                    : date('Y-m-d H:i:s');
         } else {
             $publishedAt = null;
         }
@@ -97,7 +92,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                  featured_image = :featured_image,
                  status = :status,
                  published_at = :published_at
-             WHERE id = :id'
+             WHERE id = :id',
         );
 
         $update->execute([
@@ -139,10 +134,14 @@ require_once __DIR__ . '/../includes/header.php';
 
 <section class="mx-auto max-w-5xl px-4 py-8 sm:px-6 lg:px-8">
     <div class="mb-8">
-        <a href="<?= e(url('admin/index.php')) ?>" class="text-sm font-bold text-slate-500 hover:text-red-700">← Back to dashboard</a>
+        <a href="<?= e(
+            url('admin/index.php'),
+        ) ?>" class="text-sm font-bold text-slate-500 hover:text-red-700">← Back to dashboard</a>
         <p class="mt-6 text-xs font-extrabold uppercase tracking-[0.2em] text-red-600">Editorial workspace</p>
         <h1 class="mt-2 text-3xl font-black tracking-tight text-slate-950 sm:text-4xl">Edit article<span class="text-red-600">.</span></h1>
-        <p class="mt-2 text-sm text-slate-500">Record #<?= e((string) $article['id']) ?> · Last updated <?= e(format_date($article['updated_at'])) ?></p>
+        <p class="mt-2 text-sm text-slate-500">Record #<?= e(
+            (string) $article['id'],
+        ) ?> · Last updated <?= e(format_date($article['updated_at'])) ?></p>
     </div>
 
     <?php foreach ($errors as $error): ?>
@@ -178,7 +177,11 @@ require_once __DIR__ . '/../includes/header.php';
                     <select id="category_id" name="category_id" required class="w-full border border-slate-200 bg-white px-4 py-3 text-sm outline-none focus:border-red-600">
                         <option value="">Choose a category</option>
                         <?php foreach ($categories as $category): ?>
-                            <option value="<?= e((string) $category['id']) ?>" <?= $values['category_id'] === (string) $category['id'] ? 'selected' : '' ?>>
+                            <option value="<?= e((string) $category['id']) ?>" <?= $values[
+    'category_id'
+] === (string) $category['id']
+    ? 'selected'
+    : '' ?>>
                                 <?= e($category['name']) ?>
                             </option>
                         <?php endforeach; ?>
@@ -188,8 +191,12 @@ require_once __DIR__ . '/../includes/header.php';
                 <div>
                     <label for="status" class="mb-2 block text-sm font-bold">Publication status</label>
                     <select id="status" name="status" class="w-full border border-slate-200 bg-white px-4 py-3 text-sm outline-none focus:border-red-600">
-                        <option value="draft" <?= $values['status'] === 'draft' ? 'selected' : '' ?>>Draft</option>
-                        <option value="published" <?= $values['status'] === 'published' ? 'selected' : '' ?>>Published</option>
+                        <option value="draft" <?= $values['status'] === 'draft'
+                            ? 'selected'
+                            : '' ?>>Draft</option>
+                        <option value="published" <?= $values['status'] === 'published'
+                            ? 'selected'
+                            : '' ?>>Published</option>
                     </select>
                 </div>
             </div>
@@ -202,7 +209,9 @@ require_once __DIR__ . '/../includes/header.php';
                     required
                     maxlength="600"
                     rows="3"
-                    class="w-full resize-y border border-slate-200 px-4 py-3 text-sm leading-6 outline-none focus:border-red-600"><?= e($values['excerpt']) ?></textarea>
+                    class="w-full resize-y border border-slate-200 px-4 py-3 text-sm leading-6 outline-none focus:border-red-600"><?= e(
+                        $values['excerpt'],
+                    ) ?></textarea>
             </div>
         </section>
 
@@ -236,11 +245,15 @@ require_once __DIR__ . '/../includes/header.php';
             <p class="mt-1 text-sm text-slate-500">Update the article using the rich-text editor.</p>
 
             <div id="editor" class="mt-5 bg-white"></div>
-            <textarea id="content" name="content" class="hidden" aria-hidden="true"><?= e($values['content']) ?></textarea>
+            <textarea id="content" name="content" class="hidden" aria-hidden="true"><?= e(
+                $values['content'],
+            ) ?></textarea>
         </section>
 
         <div class="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
-            <a href="<?= e(url('admin/index.php')) ?>" class="border border-slate-200 bg-white px-6 py-3.5 text-center text-sm font-bold hover:bg-slate-50">Cancel</a>
+            <a href="<?= e(
+                url('admin/index.php'),
+            ) ?>" class="border border-slate-200 bg-white px-6 py-3.5 text-center text-sm font-bold hover:bg-slate-50">Cancel</a>
             <button type="submit" class="bg-red-600 px-6 py-3.5 text-sm font-extrabold text-white hover:bg-red-700">Save changes →</button>
         </div>
     </form>

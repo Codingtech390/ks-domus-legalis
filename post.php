@@ -40,7 +40,7 @@ if ($slug === '' || strlen($slug) > 280) {
         WHERE a.slug = :slug
             AND a.status = 'published'
             AND a.published_at <= NOW()
-        LIMIT 1"
+        LIMIT 1",
     );
 
     $statement->execute(['slug' => $slug]);
@@ -86,7 +86,7 @@ if ($article !== null) {
             AND a.status = 'published'
             AND a.published_at <= NOW()
         ORDER BY a.published_at DESC, a.id DESC
-        LIMIT 3"
+        LIMIT 3",
     );
 
     $relatedStatement->execute([
@@ -106,13 +106,10 @@ if ($article !== null) {
 $articleUrl = '';
 
 if ($article !== null) {
-    $articleUrl = url(
-        'post.php?slug=' . rawurlencode((string) $article['slug'])
-    );
+    $articleUrl = url('post.php?slug=' . rawurlencode((string) $article['slug']));
 }
 
 require_once __DIR__ . '/includes/header.php';
-
 ?>
 
 <style>
@@ -1082,7 +1079,9 @@ require_once __DIR__ . '/includes/header.php';
 
                 <span aria-hidden="true">/</span>
 
-                <a href="<?= e(url('index.php?category=' . rawurlencode($article['category_slug']))) ?>">
+                <a href="<?= e(
+                    url('index.php?category=' . rawurlencode($article['category_slug'])),
+                ) ?>">
                     <?= e($article['category_name']) ?>
                 </a>
 
@@ -1137,7 +1136,9 @@ require_once __DIR__ . '/includes/header.php';
 
                                         <span aria-hidden="true"> · </span>
 
-                                        <?= e((string) reading_time((string) $article['content'])) ?>
+                                        <?= e(
+                                            (string) reading_time((string) $article['content']),
+                                        ) ?>
                                         min read
                                     </span>
 
@@ -1155,7 +1156,9 @@ require_once __DIR__ . '/includes/header.php';
                                 </button>
 
                                 <a
-                                    href="https://www.linkedin.com/sharing/share-offsite/?url=<?= rawurlencode($articleUrl) ?>"
+                                    href="https://www.linkedin.com/sharing/share-offsite/?url=<?= rawurlencode(
+                                        $articleUrl,
+                                    ) ?>"
                                     target="_blank"
                                     rel="noopener noreferrer">
 
@@ -1163,7 +1166,9 @@ require_once __DIR__ . '/includes/header.php';
                                 </a>
 
                                 <a
-                                    href="https://wa.me/?text=<?= rawurlencode($article['title'] . ' ' . $articleUrl) ?>"
+                                    href="https://wa.me/?text=<?= rawurlencode(
+                                        $article['title'] . ' ' . $articleUrl,
+                                    ) ?>"
                                     target="_blank"
                                     rel="noopener noreferrer">
 
@@ -1249,7 +1254,9 @@ require_once __DIR__ . '/includes/header.php';
                                     </button>
 
                                     <a
-                                        href="mailto:?subject=<?= rawurlencode($article['title']) ?>&body=<?= rawurlencode($articleUrl) ?>"
+                                        href="mailto:?subject=<?= rawurlencode(
+                                            $article['title'],
+                                        ) ?>&body=<?= rawurlencode($articleUrl) ?>"
                                         class="post-button post-button-outline">
 
                                         Share by email
@@ -1357,7 +1364,9 @@ require_once __DIR__ . '/includes/header.php';
                     </div>
 
                     <a
-                        href="<?= e(url('index.php?category=' . rawurlencode($article['category_slug']))) ?>"
+                        href="<?= e(
+                            url('index.php?category=' . rawurlencode($article['category_slug'])),
+                        ) ?>"
                         class="post-related-link">
 
                         More in <?= e($article['category_name']) ?>

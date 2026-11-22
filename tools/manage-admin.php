@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 if (PHP_SAPI !== 'cli') {
     http_response_code(404);
-    exit;
+    exit();
 }
 
 $mode = $argv[1] ?? '';
@@ -23,10 +23,7 @@ if (!filter_var($email, FILTER_VALIDATE_EMAIL) || strlen($email) > 190) {
 
 $nameLength = preg_match_all('/./us', $name);
 
-if (
-    $mode === 'create'
-    && ($name === '' || $nameLength === false || $nameLength > 120)
-) {
+if ($mode === 'create' && ($name === '' || $nameLength === false || $nameLength > 120)) {
     fwrite(STDERR, "Creating an account requires a name of 1–120 characters.\n");
     exit(2);
 }
@@ -59,7 +56,7 @@ try {
     if ($mode === 'create') {
         $statement = $pdo->prepare(
             'INSERT INTO admins (name, email, password)
-             VALUES (:name, :email, :password)'
+             VALUES (:name, :email, :password)',
         );
         $statement->execute([
             'name' => $name,
@@ -70,9 +67,7 @@ try {
         exit(0);
     }
 
-    $statement = $pdo->prepare(
-        'UPDATE admins SET password = :password WHERE email = :email'
-    );
+    $statement = $pdo->prepare('UPDATE admins SET password = :password WHERE email = :email');
     $statement->execute([
         'password' => $passwordHash,
         'email' => $email,

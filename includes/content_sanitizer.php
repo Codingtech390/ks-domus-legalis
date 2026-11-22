@@ -61,27 +61,27 @@ function sanitize_article_html(string $html): string
     $previous = libxml_use_internal_errors(true);
     $document = new DOMDocument('1.0', 'UTF-8');
 
-    $wrapped = '<!DOCTYPE html><html><head><meta charset="UTF-8"></head><body>'
-        . '<div id="article-root">' . $html . '</div></body></html>';
+    $wrapped =
+        '<!DOCTYPE html><html><head><meta charset="UTF-8"></head><body>' .
+        '<div id="article-root">' .
+        $html .
+        '</div></body></html>';
 
-    $document->loadHTML(
-        '<?xml encoding="UTF-8">' . $wrapped,
-        LIBXML_HTML_NODEFDTD | LIBXML_NONET
-    );
+    $document->loadHTML('<?xml encoding="UTF-8">' . $wrapped, LIBXML_HTML_NODEFDTD | LIBXML_NONET);
 
     libxml_clear_errors();
     libxml_use_internal_errors($previous);
 
     $root = $document->getElementById('article-root');
 
-    if (!$root instanceof DOMElement) {
+    if (!($root instanceof DOMElement)) {
         return '';
     }
 
     $cleanNode = static function (DOMNode $node) use (
         &$cleanNode,
         $allowedTags,
-        $allowedClasses
+        $allowedClasses,
     ): void {
         if ($node instanceof DOMComment) {
             $node->parentNode?->removeChild($node);
@@ -92,7 +92,7 @@ function sanitize_article_html(string $html): string
             return;
         }
 
-        if (!$node instanceof DOMElement) {
+        if (!($node instanceof DOMElement)) {
             foreach (iterator_to_array($node->childNodes) as $child) {
                 $cleanNode($child);
             }
@@ -148,9 +148,9 @@ function sanitize_article_html(string $html): string
             $href = trim($node->getAttribute('href'));
 
             if (
-                $href !== ''
-                && preg_match('/^(https?:\/\/|mailto:|\/|#)/i', $href)
-                && !str_starts_with($href, '//')
+                $href !== '' &&
+                preg_match('/^(https?:\/\/|mailto:|\/|#)/i', $href) &&
+                !str_starts_with($href, '//')
             ) {
                 $attributesToKeep['href'] = $href;
             }
@@ -164,12 +164,9 @@ function sanitize_article_html(string $html): string
              * Data URIs and javascript: URLs are never allowed.
              */
             if (
-                $src !== ''
-                && (
-                    str_starts_with($src, '/')
-                    || str_starts_with($src, 'https://')
-                )
-                && !str_starts_with($src, '//')
+                $src !== '' &&
+                (str_starts_with($src, '/') || str_starts_with($src, 'https://')) &&
+                !str_starts_with($src, '//')
             ) {
                 $attributesToKeep['src'] = $src;
             }
@@ -184,16 +181,14 @@ function sanitize_article_html(string $html): string
         }
 
         if ($node->hasAttribute('class')) {
-            $classes = preg_split(
-                '/\s+/',
-                trim($node->getAttribute('class'))
-            ) ?: [];
+            $classes = preg_split('/\s+/', trim($node->getAttribute('class'))) ?: [];
 
-            $classes = array_values(array_filter(
-                $classes,
-                static fn(string $class): bool =>
-                in_array($class, $allowedClasses, true)
-            ));
+            $classes = array_values(
+                array_filter(
+                    $classes,
+                    static fn(string $class): bool => in_array($class, $allowedClasses, true),
+                ),
+            );
 
             if ($classes !== []) {
                 $attributesToKeep['class'] = implode(' ', $classes);
