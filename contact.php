@@ -386,7 +386,7 @@ require_once __DIR__ . '/includes/header.php';
 
                         <!-- PHONE -->
                         <a
-                            href="tel:+911234567890"
+                            href="tel:+917042157546"
                             class="group mt-8 flex items-center gap-4 rounded-2xl border border-white/10 bg-white/[0.05] p-5 transition hover:border-[#C391EE]/40 hover:bg-white/[0.08]">
 
                             <span class="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-[#C391EE]/15 text-[#d8b9f5]">
@@ -404,7 +404,7 @@ require_once __DIR__ . '/includes/header.php';
                                 </span>
 
                                 <span class="mt-1 block break-all text-base font-semibold text-white sm:text-lg">
-                                    +91 12345 67890
+                                    +91 7042157546
                                 </span>
 
                             </span>
@@ -418,7 +418,7 @@ require_once __DIR__ . '/includes/header.php';
 
                         <!-- EMAIL -->
                         <a
-                            href="mailto:contact@ksdomuslegalis.com"
+                            href="mailto:officeofdomuslegalis@gmail.com"
                             class="group mt-4 flex items-center gap-4 rounded-2xl border border-white/10 bg-white/[0.05] p-5 transition hover:border-[#C391EE]/40 hover:bg-white/[0.08]">
 
                             <span class="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-[#C391EE]/15 text-[#d8b9f5]">
@@ -437,7 +437,7 @@ require_once __DIR__ . '/includes/header.php';
                                 </span>
 
                                 <span class="mt-1 block break-all text-sm font-semibold text-white sm:text-base">
-                                    contact@ksdomuslegalis.com
+                                    officeofdomuslegalis@gmail.com
                                 </span>
 
                             </span>
